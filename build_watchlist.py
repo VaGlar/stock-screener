@@ -1,148 +1,140 @@
 """
-Dynamic Watchlist Builder
-Τραβάει μετοχές από Finviz με διάφορα φίλτρα
-και φτιάχνει το watchlist.json για το screener.py
+Dynamic Watchlist Builder — Yahoo Finance version
+Χρησιμοποιεί yfinance αντί Finviz για να αποφύγει το blocking
 """
 
-import requests
+import yfinance as yf
 import json
 import time
 from datetime import datetime
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+# ── Predefined sector lists ───────────────────────────────────────
+# Καλύπτουν διαφορετικά profiles: value, growth, small cap, momentum
+SECTOR_LISTS = {
+    "sp500_value": [
+        "AAPL","MSFT","GOOGL","AMZN","META","NVDA","BRK-B","JPM","JNJ","V",
+        "PG","UNH","HD","MA","XOM","CVX","MRK","ABBV","PFE","KO",
+        "PEP","TMO","COST","AVGO","MCD","ACN","LIN","DHR","ABT","TXN"
+    ],
+    "growth_tech": [
+        "DDOG","SNOW","CRWD","NET","ZS","MDB","GTLB","BILL","HUBS","TEAM",
+        "OKTA","ESTC","CFLT","DXCM","DOCU","FROG","TTD","CELH","ABNB","UBER",
+        "DASH","RBLX","U","PINS","SNAP","LYFT","HOOD","COIN","AFRM","SOFI"
+    ],
+    "semiconductors": [
+        "NVDA","AMD","INTC","QCOM","AVGO","MU","AMAT","LRCX","KLAC","MRVL",
+        "ON","SWKS","MCHP","ADI","TXN","WOLF","SITM","CRUS","AMBA","SMTC"
+    ],
+    "small_cap_growth": [
+        "IONQ","ARRY","JOBY","ACHR","LUNR","RDW","ASTS","SPCE","RKLB","PL",
+        "LILM","EVTL","NKLA","BLDE","SKYW","DMRC","MAPS","GFAI","KTOS","AVAV"
+    ],
+    "healthcare_biotech": [
+        "LLY","NVO","MRNA","BNTX","REGN","VRTX","BIIB","GILD","AMGN","BMY",
+        "INCY","ALNY","SGEN","RARE","ACAD","EXAS","NTRA","PACB","VCYT","RXRX"
+    ],
+    "energy_commodities": [
+        "XOM","CVX","COP","SLB","HAL","BKR","MPC","VLO","PSX","OXY",
+        "DVN","EOG","PXD","FANG","APA","RIG","NOV","HP","NE","TDW"
+    ],
+    "european_us_listed": [
+        "ASML","SAP","NVO","SHOP","SE","GRAB","BABA","JD","PDD","BIDU",
+        "NIO","LI","XPEV","TSM","UMC","SMCI","LTHM","MP","CAMT","AEHR"
+    ]
 }
 
-# ── Finviz URLs ───────────────────────────────────────────────────
-# Κάθε URL είναι ένα διαφορετικό φίλτρο στο Finviz
-FINVIZ_SCREENS = {
-
-    "value_opportunities": (
-        "https://finviz.com/screener.ashx?v=111&f="
-        "fa_pe_u30,"           # P/E κάτω από 30
-        "fa_epsqoq_pos,"       # EPS growth θετικό
-        "fa_salesqoq_o10,"     # Revenue growth > 10%
-        "ta_perf_52w_dn30"     # -30% ή περισσότερο από 52w high
-        "&ft=4&o=-marketcap"
-    ),
-
-    "growth_momentum": (
-        "https://finviz.com/screener.ashx?v=111&f="
-        "fa_salesqoq_o20,"     # Revenue growth > 20%
-        "fa_epsqoq_pos,"       # Θετικό EPS growth
-        "ta_perf_4w_up,"       # Ανοδικό momentum τελευταίες 4 εβδομάδες
-        "sh_avgvol_o200"       # Average volume > 200k (liquidity)
-        "&ft=4&o=-marketcap"
-    ),
-
-    "insider_buying": (
-        "https://finviz.com/screener.ashx?v=111&f="
-        "it_latestbuys,"       # Πρόσφατο insider buying
-        "fa_debt_u1,"          # Debt/Equity < 1
-        "sh_avgvol_o100"       # Volume > 100k
-        "&ft=4&o=-marketcap"
-    ),
-
-    "near_52w_low_with_upside": (
-        "https://finviz.com/screener.ashx?v=111&f="
-        "ta_highlow52w_b20h,"  # Κοντά στο 52w low (within 20%)
-        "an_recom_buybetter,"  # Analyst recommendation: Buy ή καλύτερο
-        "fa_salesqoq_pos,"     # Θετικό revenue growth
-        "sh_avgvol_o200"       # Liquidity
-        "&ft=4&o=an_recom"
-    ),
-
-    "small_cap_growth": (
-        "https://finviz.com/screener.ashx?v=111&f="
-        "cap_small,"           # Small cap ($300M - $2B)
-        "fa_salesqoq_o15,"     # Revenue growth > 15%
-        "fa_epsqoq_pos,"       # Θετικό EPS
-        "sh_avgvol_o100"       # Volume > 100k
-        "&ft=4&o=-marketcap"
-    ),
-}
-
-MAX_PER_SCREEN = 20  # Πόσες μετοχές από κάθε φίλτρο
+MAX_PER_SECTOR = 20
 
 
-def parse_finviz_table(html):
-    """Parse το HTML table του Finviz και επιστρέφει λίστα tickers"""
-    tickers = []
+def get_basic_info(ticker):
+    """Τραβάει βασικά στοιχεία για scoring"""
     try:
-        # Ψάχνει για ticker symbols στο HTML
-        import re
-        # Finviz tickers εμφανίζονται ως: quote.ashx?t=TICKER
-        matches = re.findall(r'quote\.ashx\?t=([A-Z]+)"', html)
-        tickers = list(dict.fromkeys(matches))  # deduplicate διατηρώντας σειρά
-    except Exception as e:
-        print(f"  Parse error: {e}")
-    return tickers
+        stock = yf.Ticker(ticker)
+        info = stock.info
 
+        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+        week52_high = info.get("fiftyTwoWeekHigh")
+        target_price = info.get("targetMeanPrice")
+        revenue_growth = info.get("revenueGrowth")
+        recommendation = info.get("recommendationKey", "")
+        pe = info.get("trailingPE")
 
-def fetch_finviz_screen(name, url, max_results=20):
-    """Τραβάει μετοχές από ένα Finviz screen"""
-    print(f"  Fetching: {name}...")
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        if resp.status_code != 200:
-            print(f"  ⚠️ Status {resp.status_code} for {name}")
-            return []
+        if not current_price or not week52_high:
+            return None
 
-        tickers = parse_finviz_table(resp.text)[:max_results]
-        print(f"  ✅ Found {len(tickers)} tickers")
-        time.sleep(2)  # Respectful delay
-        return tickers
+        pct_from_high = (current_price - week52_high) / week52_high
+        analyst_upside = ((target_price - current_price) / current_price) if target_price else 0
 
-    except Exception as e:
-        print(f"  ❌ Error: {e}")
-        return []
+        # Quick scoring για prioritization
+        score = 0
+        if pct_from_high <= -0.25: score += 2      # Έχει πέσει >25%
+        if analyst_upside >= 0.20: score += 2       # Analyst upside >20%
+        if recommendation in ["strongBuy", "buy"]: score += 1
+        if revenue_growth and revenue_growth >= 0.15: score += 1
+        if pe and 0 < pe <= 25: score += 1
+
+        return {
+            "symbol": ticker,
+            "score": score,
+            "pct_from_high": pct_from_high,
+            "analyst_upside": analyst_upside,
+            "recommendation": recommendation,
+        }
+    except:
+        return None
 
 
 def build_watchlist():
-    """Χτίζει το δυναμικό watchlist από όλα τα screens"""
-    print(f"\n🔍 Building dynamic watchlist — {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print(f"\n🔍 Building watchlist — {datetime.now().strftime('%d/%m/%Y %H:%M')}")
     print("=" * 60)
 
-    all_tickers = {}
+    all_results = {}
 
-    for screen_name, url in FINVIZ_SCREENS.items():
-        tickers = fetch_finviz_screen(screen_name, url, MAX_PER_SCREEN)
-        for ticker in tickers:
-            if ticker not in all_tickers:
-                all_tickers[ticker] = []
-            all_tickers[ticker].append(screen_name)
+    for sector, tickers in SECTOR_LISTS.items():
+        print(f"\n📂 {sector} ({len(tickers)} tickers)...")
+        sector_count = 0
 
-    # Tickers που εμφανίζονται σε πολλά screens → υψηλότερη προτεραιότητα
-    sorted_tickers = sorted(
-        all_tickers.items(),
-        key=lambda x: len(x[1]),
+        for ticker in tickers[:MAX_PER_SECTOR]:
+            result = get_basic_info(ticker)
+            if result and result["score"] >= 2:
+                if ticker not in all_results:
+                    all_results[ticker] = result
+                    all_results[ticker]["screens"] = [sector]
+                else:
+                    all_results[ticker]["screens"].append(sector)
+                    all_results[ticker]["priority"] = len(all_results[ticker]["screens"])
+                sector_count += 1
+            time.sleep(0.3)  # Gentle delay
+
+        print(f"  ✅ {sector_count} interesting tickers")
+
+    # Ταξινόμηση — πρώτα αυτά με υψηλό score και πολλά sectors
+    sorted_results = sorted(
+        all_results.values(),
+        key=lambda x: (x.get("priority", 1), x["score"]),
         reverse=True
     )
 
+    # Πρόσθεσε priority field
+    for r in sorted_results:
+        r["priority"] = len(r.get("screens", []))
+
     watchlist = {
         "generated_at": datetime.now().isoformat(),
-        "total_tickers": len(all_tickers),
-        "tickers": [
-            {
-                "symbol": ticker,
-                "screens": screens,
-                "priority": len(screens)  # Πόσα φίλτρα το εντόπισαν
-            }
-            for ticker, screens in sorted_tickers
-        ]
+        "total_tickers": len(sorted_results),
+        "tickers": sorted_results
     }
 
-    # Αποθήκευση
     with open("watchlist.json", "w") as f:
         json.dump(watchlist, f, indent=2)
 
-    print(f"\n✅ Watchlist built: {len(all_tickers)} unique tickers")
-    print(f"🏆 High priority (2+ screens): {sum(1 for _, s in sorted_tickers if len(s) >= 2)}")
+    print(f"\n✅ Watchlist: {len(sorted_results)} tickers")
+    print(f"🏆 Multi-sector hits: {sum(1 for r in sorted_results if r['priority'] >= 2)}")
 
     # Preview top 10
-    print("\nTop 10 tickers:")
-    for ticker, screens in sorted_tickers[:10]:
-        print(f"  {ticker:8} — {', '.join(screens)}")
+    print("\nTop 10:")
+    for r in sorted_results[:10]:
+        print(f"  {r['symbol']:8} score={r['score']} upside={r['analyst_upside']:.0%} sectors={r['screens']}")
 
     return watchlist
 
