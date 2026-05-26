@@ -302,7 +302,7 @@ PILLAR_S_BUY = {
     "eva": 8, "technicals": 6, "sam": 7, "catalyst": 6
 }
 
-def passes_s(scores, thresholds, total):
+def passes_minimums(scores, thresholds, total):
     """Κόβει μετοχές που αποτυγχάνουν σε κάποιο pillar minimum"""
     if total >= thresholds.get("buy", 100):
         mins = PILLAR_MINIMUMS_BUY
