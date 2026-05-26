@@ -17,7 +17,11 @@ def get_sp500_tickers():
         html = resp.read().decode("utf-8")
     # Parse ticker symbols από το πρώτο table
     import re
-    tickers = re.findall(r'<td><a[^>]*>([A-Z]{1,5})</a></td>', html)
+    tickers = re.findall(r'<td><b><a[^>]*>([A-Z.\-]{1,5})</a></b></td>', html)
+    # Fallback αν δεν βρει
+    if len(tickers) < 100:
+        tickers = re.findall(r'/wiki/[^"]*">([A-Z]{2,5})</a>', html)
+    
     # Καθάρισε duplicates
     seen = set()
     result = []
