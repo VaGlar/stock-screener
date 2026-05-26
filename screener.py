@@ -432,15 +432,12 @@ def build_html_report(results, watchlist_meta):
     <div style="background:#0f0f11;color:white;padding:24px;border-radius:12px;margin-bottom:24px;">
         <div style="font-size:22px;font-weight:600">📊 Weekly Stock Screener</div>
         <div style="font-size:13px;color:#9ca3af;margin-top:4px">
-            Βασίλης · {date_str} · {total_scanned} μετοχές scanned · 7-Pillar /145 · Top {MAX_REPORT} εμφανίζονται
+            {date_str} · {total_scanned} μετοχές scanned · 7-Pillar /145 · Top {MAX_REPORT} εμφανίζονται
         </div>
     </div>
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 της εβδομάδας</div>
     {cards_html}
     {rest_html}
-    <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
-        ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
-    </div>
     </body></html>"""
 
 
