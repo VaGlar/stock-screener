@@ -354,7 +354,7 @@ def build_html_report(results, watchlist_meta):
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px;">
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
-                    <div style="font-size:10px;color:#9ca3af">Τιμή</div>
+                    <div style="font-size:10px;color:#9ca3af">Value</div>
                     <div style="font-size:14px;font-weight:600">${d['price']:.2f}</div>
                 </div>
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
@@ -412,11 +412,11 @@ def build_html_report(results, watchlist_meta):
     if rest:
         rest_html = f"""
         <div style="margin-top:28px">
-            <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">👀 Watchlist ({len(rest)} μετοχές)</h2>
+            <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">👀 Watchlist ({len(rest)} stocks)</h2>
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
-                    <th style="padding:7px 8px;text-align:left">Μετοχή</th>
-                    <th style="padding:7px 8px;text-align:left">Τιμή</th>
+                    <th style="padding:7px 8px;text-align:left">Stock</th>
+                    <th style="padding:7px 8px;text-align:left">Value</th>
                     <th style="padding:7px 8px;text-align:left">vs 52w</th>
                     <th style="padding:7px 8px;text-align:left">Upside</th>
                     <th style="padding:7px 8px;text-align:left">RSI</th>
@@ -432,10 +432,10 @@ def build_html_report(results, watchlist_meta):
     <div style="background:#0f0f11;color:white;padding:24px;border-radius:12px;margin-bottom:24px;">
         <div style="font-size:22px;font-weight:600">📊 Weekly Stock Screener</div>
         <div style="font-size:13px;color:#9ca3af;margin-top:4px">
-            {date_str} · {total_scanned} μετοχές scanned · 7-Pillar /145 · Top {MAX_REPORT} εμφανίζονται
+            {date_str} · {total_scanned} stocks scanned · Top {MAX_REPORT}
         </div>
     </div>
-    <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 της εβδομάδας</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week </div>
     {cards_html}
     {rest_html}
     </body></html>"""
