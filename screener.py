@@ -1,5 +1,5 @@
 """
-Weekly Stock Screener για Βασίλη
+Weekly Stock Screener
 Διαβάζει το watchlist.json από το build_watchlist.py
 και στέλνει report στο email
 """
@@ -24,7 +24,7 @@ FILTERS = {
     "min_analyst_upside": 0.15,
 }
 
-MAX_TICKERS = 80
+MAX_TICKERS = 500
 
 
 def load_watchlist():
