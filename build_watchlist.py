@@ -57,8 +57,6 @@ def get_yahoo_screens():
             print(f"  ⚠️ {screen}: {e}")
     return all_tickers
     
-MAX_PER_SECTOR = 20
-
 def get_basic_info(ticker):
     """Τραβάει βασικά στοιχεία για scoring"""
     try:
