@@ -9,28 +9,24 @@ import time
 from datetime import datetime
 
 def get_sp500_tickers():
-    """Κατεβάζει την τρέχουσα λίστα S&P 500 από Wikipedia"""
+    """Κατεβάζει S&P 500 από αξιόπιστο CSV dataset"""
     import urllib.request
-    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        html = resp.read().decode("utf-8")
-    # Parse ticker symbols από το πρώτο table
-    import re
-    tickers = re.findall(r'<td><b><a[^>]*>([A-Z.\-]{1,5})</a></b></td>', html)
-    # Fallback αν δεν βρει
-    if len(tickers) < 100:
-        tickers = re.findall(r'/wiki/[^"]*">([A-Z]{2,5})</a>', html)
-    
-    # Καθάρισε duplicates
-    seen = set()
-    result = []
-    for t in tickers:
-        if t not in seen:
-            seen.add(t)
-            result.append(t)
-    print(f"  ✅ S&P 500: {len(result)} tickers")
-    return result
+    import csv
+    import io
+
+    # Primary source: GitHub datasets
+    url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+        reader = csv.DictReader(io.StringIO(content))
+        tickers = [row["Symbol"].replace(".", "-") for row in reader]
+        print(f"  ✅ S&P 500: {len(tickers)} tickers")
+        return tickers
+    except Exception as e:
+        print(f"  ⚠️ S&P 500 fetch failed: {e}")
+        return []
 
 
 def get_yahoo_screens():
