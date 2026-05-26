@@ -121,7 +121,7 @@ def build_watchlist():
                 all_results[ticker]["priority"] = len(all_results[ticker]["screens"])
         time.sleep(0.3)
 
-        print(f"  ✅ {sector_count} interesting tickers")
+        print(f"  ✅ {len(all_results)} interesting tickers")
 
     # Ταξινόμηση — πρώτα αυτά με υψηλό score και πολλά sectors
     sorted_results = sorted(
