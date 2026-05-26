@@ -510,6 +510,9 @@ def main():
                 "sector_key": sector_key,
                 "thresholds": thresholds,
             })
+        else:
+            if not passes:
+                print(f"  ❌ {ticker} cut — {failed_pillar} below minimum")
         time.sleep(0.2)
 
     print(f"\n✅ {len(results)} stocks passed filters")
