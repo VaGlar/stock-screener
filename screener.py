@@ -292,6 +292,26 @@ def score_stock(data, sector_cfg):
 
 # ── Action label ──────────────────────────────────────────────────
 
+# Minimum threshold per pillar
+PILLAR_MINIMUMS_WATCH = {
+    "moat": 10, "growth": 8, "valuation": 6,
+    "eva": 5, "technicals": 4, "sam": 5, "catalyst": 4
+}
+PILLAR_MINIMUMS_BUY = {
+    "moat": 15, "growth": 12, "valuation": 8,
+    "eva": 8, "technicals": 6, "sam": 7, "catalyst": 6
+}
+
+def passes_minimums(scores, thresholds, total):
+    """Κόβει μετοχές που αποτυγχάνουν σε κάποιο pillar minimum"""
+    if total >= thresholds.get("buy", 100):
+        mins = PILLAR_MINIMUMS_BUY
+    else:
+        mins = PILLAR_MINIMUMS_WATCH
+    for pillar, min_score in mins.items():
+        if (scores.get(pillar) or 0) < min_score:
+            return False, pillar
+    return True, None
 def get_action(score, thresholds):
     if score >= thresholds.get("buy", 100): return "STRONG BUY", "#14532d", "#dcfce7"
     if score >= thresholds.get("watch", 80): return "BUY", "#166534", "#f0fdf4"
@@ -480,7 +500,8 @@ def main():
         sector_cfg, sector_key = get_sector_config(data, config)
         thresholds = sector_cfg.get("thresholds", {"pass": 65, "watch": 80, "buy": 100})
         scores, flags, total = score_stock(data, sector_cfg)
-        if total >= 40:
+        passes, failed_pillar = passes_minimums(scores, thresholds, total)
+        if total >= 40 and passes:
             results.append({
                 "data": data,
                 "scores": scores,
