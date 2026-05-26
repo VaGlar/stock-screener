@@ -292,17 +292,17 @@ def score_stock(data, sector_cfg):
 
 # ── Action label ──────────────────────────────────────────────────
 
-# Minimum threshold per pillar
-PILLAR_MINIMUMS_WATCH = {
+#  threshold per pillar
+PILLAR_S_WATCH = {
     "moat": 10, "growth": 8, "valuation": 6,
     "eva": 5, "technicals": 4, "sam": 5, "catalyst": 4
 }
-PILLAR_MINIMUMS_BUY = {
+PILLAR_S_BUY = {
     "moat": 15, "growth": 12, "valuation": 8,
     "eva": 8, "technicals": 6, "sam": 7, "catalyst": 6
 }
 
-def passes_minimums(scores, thresholds, total):
+def passes_s(scores, thresholds, total):
     """Κόβει μετοχές που αποτυγχάνουν σε κάποιο pillar minimum"""
     if total >= thresholds.get("buy", 100):
         mins = PILLAR_MINIMUMS_BUY
