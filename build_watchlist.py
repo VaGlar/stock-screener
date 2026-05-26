@@ -8,43 +8,52 @@ import json
 import time
 from datetime import datetime
 
-# ── Predefined sector lists ───────────────────────────────────────
-# Καλύπτουν διαφορετικά profiles: value, growth, small cap, momentum
-SECTOR_LISTS = {
-    "sp500_value": [
-        "AAPL","MSFT","GOOGL","AMZN","META","NVDA","BRK-B","JPM","JNJ","V",
-        "PG","UNH","HD","MA","XOM","CVX","MRK","ABBV","PFE","KO",
-        "PEP","TMO","COST","AVGO","MCD","ACN","LIN","DHR","ABT","TXN"
-    ],
-    "growth_tech": [
-        "DDOG","SNOW","CRWD","NET","ZS","MDB","GTLB","BILL","HUBS","TEAM",
-        "OKTA","ESTC","CFLT","DXCM","DOCU","FROG","TTD","CELH","ABNB","UBER",
-        "DASH","RBLX","U","PINS","SNAP","LYFT","HOOD","COIN","AFRM","SOFI"
-    ],
-    "semiconductors": [
-        "NVDA","AMD","INTC","QCOM","AVGO","MU","AMAT","LRCX","KLAC","MRVL",
-        "ON","SWKS","MCHP","ADI","TXN","WOLF","SITM","CRUS","AMBA","SMTC"
-    ],
-    "small_cap_growth": [
-        "IONQ","ARRY","JOBY","ACHR","LUNR","RDW","ASTS","SPCE","RKLB","PL",
-        "LILM","EVTL","NKLA","BLDE","SKYW","DMRC","MAPS","GFAI","KTOS","AVAV"
-    ],
-    "healthcare_biotech": [
-        "LLY","NVO","MRNA","BNTX","REGN","VRTX","BIIB","GILD","AMGN","BMY",
-        "INCY","ALNY","SGEN","RARE","ACAD","EXAS","NTRA","PACB","VCYT","RXRX"
-    ],
-    "energy_commodities": [
-        "XOM","CVX","COP","SLB","HAL","BKR","MPC","VLO","PSX","OXY",
-        "DVN","EOG","PXD","FANG","APA","RIG","NOV","HP","NE","TDW"
-    ],
-    "european_us_listed": [
-        "ASML","SAP","NVO","SHOP","SE","GRAB","BABA","JD","PDD","BIDU",
-        "NIO","LI","XPEV","TSM","UMC","SMCI","LTHM","MP","CAMT","AEHR"
+def get_sp500_tickers():
+    """Κατεβάζει την τρέχουσα λίστα S&P 500 από Wikipedia"""
+    import urllib.request
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        html = resp.read().decode("utf-8")
+    # Parse ticker symbols από το πρώτο table
+    import re
+    tickers = re.findall(r'<td><a[^>]*>([A-Z]{1,5})</a></td>', html)
+    # Καθάρισε duplicates
+    seen = set()
+    result = []
+    for t in tickers:
+        if t not in seen:
+            seen.add(t)
+            result.append(t)
+    print(f"  ✅ S&P 500: {len(result)} tickers")
+    return result
+
+
+def get_yahoo_screens():
+    """Τραβάει dynamic screens από Yahoo Finance"""
+    import yfinance as yf
+    screens = [
+        "undervalued_growth_stocks",
+        "growth_technology_stocks", 
+        "undervalued_large_caps",
+        "aggressive_small_caps",
+        "day_gainers",
+        "most_actives",
     ]
-}
-
+    all_tickers = []
+    for screen in screens:
+        try:
+            df = yf.screen(screen)
+            if df and "quotes" in df:
+                tickers = [q["symbol"] for q in df["quotes"] if "symbol" in q]
+                all_tickers.extend(tickers)
+                print(f"  ✅ {screen}: {len(tickers)} tickers")
+            time.sleep(1)
+        except Exception as e:
+            print(f"  ⚠️ {screen}: {e}")
+    return all_tickers
+    
 MAX_PER_SECTOR = 20
-
 
 def get_basic_info(ticker):
     """Τραβάει βασικά στοιχεία για scoring"""
@@ -90,21 +99,27 @@ def build_watchlist():
 
     all_results = {}
 
-    for sector, tickers in SECTOR_LISTS.items():
-        print(f"\n📂 {sector} ({len(tickers)} tickers)...")
-        sector_count = 0
+    # Μάζεψε tickers από όλες τις πηγές
+    print("\n📡 Fetching S&P 500 list...")
+    sp500 = get_sp500_tickers()
 
-        for ticker in tickers[:MAX_PER_SECTOR]:
-            result = get_basic_info(ticker)
-            if result and result["score"] >= 2:
-                if ticker not in all_results:
-                    all_results[ticker] = result
-                    all_results[ticker]["screens"] = [sector]
-                else:
-                    all_results[ticker]["screens"].append(sector)
-                    all_results[ticker]["priority"] = len(all_results[ticker]["screens"])
-                sector_count += 1
-            time.sleep(0.3)  # Gentle delay
+    print("\n📡 Fetching Yahoo Finance screens...")
+    yahoo = get_yahoo_screens()
+
+    # Merge — Yahoo screens πρώτα (πιο relevant), μετά S&P 500
+    all_tickers_ordered = list(dict.fromkeys(yahoo + sp500))
+    print(f"\n📊 Total unique tickers: {len(all_tickers_ordered)}")
+
+    for ticker in all_tickers_ordered:
+        result = get_basic_info(ticker)
+        if result and result["score"] >= 2:
+            if ticker not in all_results:
+                all_results[ticker] = result
+                all_results[ticker]["screens"] = ["dynamic"]
+            else:
+                all_results[ticker]["screens"].append("dynamic")
+                all_results[ticker]["priority"] = len(all_results[ticker]["screens"])
+        time.sleep(0.3)
 
         print(f"  ✅ {sector_count} interesting tickers")
 
