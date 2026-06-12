@@ -17,7 +17,7 @@ from datetime import datetime
 SENDER_EMAIL = "vasilisglaros@gmail.com"
 RECEIVER_EMAIL = "vasilisglaros@gmail.com"
 EMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
-MAX_TICKERS = 500
+MAX_TICKERS = 2000
 MAX_REPORT = 30  # Μέγιστες μετοχές στο report
 
 
