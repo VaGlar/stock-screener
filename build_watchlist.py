@@ -22,8 +22,9 @@ MAX_TICKERS = 500
 def get_vwce_tickers():
     print("\n📡 Source 1: VWCE holdings από justETF...")
     urls = [
-        "https://www.justetf.com/api/etfs/IE00BK5BQT80/holdings?lang=en&valuta=EUR",
-        "https://www.justetf.com/en/etf-profile.html?isin=IE00BK5BQT80#holdings",
+        "https://www.justetf.com/api/etfs/holdings?isin=IE00BK5BQT80&lang=en&country=DE&currency=EUR",
+        "https://www.justetf.com/servlet/holdings?isin=IE00BK5BQT80&lang=en",
+        "https://www.justetf.com/en/etf-profile.html?isin=IE00BK5BQT80",
     ]
     for url in urls:
         try:
