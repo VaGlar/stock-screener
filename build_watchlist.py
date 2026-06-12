@@ -34,12 +34,12 @@ WIKIPEDIA_INDICES = {
     },
     "DAX 🇩🇪": {
         "url": "https://en.wikipedia.org/wiki/DAX",
-        "ticker_col": 3,
+        "ticker_col": 1,
         "suffix": ".DE",
     },
     "CAC 40 🇫🇷": {
         "url": "https://en.wikipedia.org/wiki/CAC_40",
-        "ticker_col": 2,
+        "ticker_col": 3,
         "suffix": ".PA",
     },
     "Eurostoxx 50 🇪🇺": {
