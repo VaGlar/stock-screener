@@ -20,40 +20,43 @@ MAX_TICKERS = 500
 
 
 def get_vwce_tickers():
-    print("\n📡 Source 1: VWCE holdings από justetf-scraping...")
-    try:
-        import justetf_scraping
-        overview = justetf_scraping.get_etf_overview("IE00BK5BQT80")
-        
-        # Top holdings από library
-        holdings = overview.get("top_holdings", [])
-        tickers = []
-        for h in holdings:
-            isin = h.get("isin", "")
-            name = h.get("name", "")
-            # Convert ISIN to ticker via yfinance
-            if isin:
-                try:
-                    stock = yf.Ticker(isin)
-                    info = stock.info
-                    symbol = info.get("symbol")
-                    if symbol:
-                        tickers.append(symbol)
-                except:
-                    pass
-        
-        if len(tickers) > 5:
-            print(f"  ✅ SUCCESS — {len(tickers)} tickers από justetf-scraping")
-            return tickers, True
-        else:
-            print(f"  ⚠️ Μόνο {len(tickers)} tickers — library δίνει top 10 μόνο")
-            return tickers, False
-    except ImportError:
-        print("  ❌ FAILED — justetf-scraping not installed")
-        return [], False
-    except Exception as e:
-        print(f"  ❌ FAILED — {e}")
-        return [], False
+    print("\n📡 Source 1: IWDA holdings από iShares (VWCE proxy)...")
+    
+    # iShares MSCI World UCITS ETF — 1.600 μετοχές, developed markets
+    # Direct CSV download URL
+    urls = [
+        "https://www.ishares.com/uk/individual/en/products/251882/ISHARES_MSCI_WORLD_ETF/1478372549651.ajax?tab=holdings&fileType=csv",
+        "https://www.ishares.com/us/products/239726/ISHARES_CORE_MSCI_WORLD_ETF/1467271812596.ajax?tab=holdings&fileType=csv",
+    ]
+    
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                content = resp.read().decode("utf-8")
+            
+            # Parse CSV — iShares format έχει header rows
+            lines = content.split("\n")
+            tickers = []
+            for line in lines:
+                cols = line.split(",")
+                if len(cols) >= 3:
+                    ticker = cols[0].strip().strip('"')
+                    # Φιλτράρισε valid US tickers
+                    if re.match(r'^[A-Z]{1,5}$', ticker):
+                        tickers.append(ticker)
+            
+            tickers = list(dict.fromkeys(tickers))
+            if len(tickers) > 100:
+                print(f"  ✅ SUCCESS — {len(tickers)} tickers από iShares IWDA")
+                return tickers, True
+                
+        except Exception as e:
+            print(f"  ⚠️ URL failed: {e}")
+            continue
+    
+    print("  ❌ FAILED — iShares δεν ήταν προσβάσιμο")
+    return [], False
 
 
 def get_sp500_tickers():
