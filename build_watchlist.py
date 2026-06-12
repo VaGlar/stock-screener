@@ -34,7 +34,7 @@ WIKIPEDIA_INDICES = {
     },
     "CAC 40 🇫🇷": {
         "url": "https://en.wikipedia.org/wiki/CAC_40",
-        "ticker_col": 3,
+        "ticker_col": 2,
         "suffix": ".PA",
     },
     "Eurostoxx 50 🇪🇺": {
