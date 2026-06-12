@@ -20,7 +20,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install yfinance pandas requests numpy justetf-scraping
+        run: pip install yfinance pandas requests numpy
+    
 
       - name: Step 1 — Build dynamic watchlist from Finviz
         run: python build_watchlist.py
