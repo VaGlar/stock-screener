@@ -1,0 +1,321 @@
+{
+  "_readme": "Sector scoring config. Το screener αντιστοιχίζει αυτόματα κάθε μετοχή στον κλάδο της μέσω Yahoo Finance sector/industry. Άλλαξε τις τιμές εδώ και το screener θα τις διαβάσει αυτόματα.",
+
+  "industry_mapping": {
+    "_readme": "Mapping από Yahoo Finance industry → config sector. Το screener διαβάζει το industry field και το αντιστοιχίζει.",
+    "Software—Application": "saas_cloud",
+    "Software—Infrastructure": "saas_cloud",
+    "Information Technology Services": "saas_cloud",
+    "Internet Content & Information": "saas_cloud",
+    "Semiconductors": "semiconductors",
+    "Semiconductor Equipment & Materials": "semiconductors",
+    "Consumer Electronics": "mega_cap_tech",
+    "Internet Retail": "mega_cap_tech",
+    "Telecom Services": "mega_cap_tech",
+    "Beverages—Non-Alcoholic": "consumer_beverages",
+    "Beverages—Alcoholic": "consumer_beverages",
+    "Packaged Foods": "consumer_beverages",
+    "Household & Personal Products": "consumer_beverages",
+    "Drug Manufacturers—General": "healthcare_biotech",
+    "Drug Manufacturers—Specialty & Generic": "healthcare_biotech",
+    "Biotechnology": "healthcare_biotech",
+    "Medical Devices": "healthcare_biotech",
+    "Diagnostics & Research": "healthcare_biotech",
+    "Oil & Gas E&P": "energy",
+    "Oil & Gas Integrated": "energy",
+    "Oil & Gas Equipment & Services": "energy",
+    "Oil & Gas Midstream": "energy",
+    "Oil & Gas Refining & Marketing": "energy"
+  },
+
+  "sector_mapping": {
+    "_readme": "Fallback mapping από Yahoo Finance sector → config sector. Χρησιμοποιείται αν το industry δεν βρεθεί στο industry_mapping.",
+    "Technology": "saas_cloud",
+    "Healthcare": "healthcare_biotech",
+    "Energy": "energy",
+    "Consumer Cyclical": "consumer_beverages",
+    "Consumer Defensive": "consumer_beverages",
+    "Communication Services": "mega_cap_tech",
+    "Basic Materials": "energy",
+    "Industrials": "default",
+    "Financial Services": "default",
+    "Real Estate": "default",
+    "Utilities": "default"
+  },
+
+  "sectors": {
+
+    "saas_cloud": {
+      "_label": "SaaS / Cloud / Tech",
+      "moat": {
+        "gross_margin_strong": 70,
+        "gross_margin_ok": 55,
+        "gross_margin_weak": 40,
+        "note": "Υψηλά margins λόγω switching costs και data lock-in"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.25,
+        "revenue_growth_ok": 0.15,
+        "revenue_growth_weak": 0.08,
+        "note": "Περιμένουμε >25% για strong score"
+      },
+      "valuation": {
+        "pe_cheap": 40,
+        "pe_fair": 60,
+        "pe_expensive": 80,
+        "ev_revenue_cheap": 8,
+        "ev_revenue_fair": 15,
+        "ev_revenue_expensive": 25,
+        "note": "Τιμολογείται σε EV/Revenue — P/E λιγότερο σχετικό"
+      },
+      "eva": {
+        "roic_strong": 0.20,
+        "roic_ok": 0.10,
+        "roic_weak": 0.00,
+        "note": "Πολλές είναι ακόμα ζημιογόνες — Rule of 40 πιο σχετικό"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.30,
+        "from_52w_high_deep_value": -0.50
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "semiconductors": {
+      "_label": "Semiconductors",
+      "moat": {
+        "gross_margin_strong": 55,
+        "gross_margin_ok": 45,
+        "gross_margin_weak": 35,
+        "note": "IP, manufacturing nodes, ecosystem lock-in"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.20,
+        "revenue_growth_ok": 0.10,
+        "revenue_growth_weak": 0.03,
+        "note": "Κυκλικός κλάδος — σημαντικό το cycle timing"
+      },
+      "valuation": {
+        "pe_cheap": 20,
+        "pe_fair": 30,
+        "pe_expensive": 50,
+        "ev_ebitda_cheap": 15,
+        "ev_ebitda_fair": 25,
+        "ev_ebitda_expensive": 40,
+        "note": "Προσοχή στο cycle position"
+      },
+      "eva": {
+        "roic_strong": 0.25,
+        "roic_ok": 0.15,
+        "roic_weak": 0.08,
+        "note": "Capex-intensive — ROIC πάνω από WACC (~8%) κλειδί"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.25,
+        "from_52w_high_deep_value": -0.45
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "consumer_beverages": {
+      "_label": "Consumer / Beverages / Staples",
+      "moat": {
+        "gross_margin_strong": 50,
+        "gross_margin_ok": 40,
+        "gross_margin_weak": 30,
+        "note": "Brand loyalty και distribution network"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.15,
+        "revenue_growth_ok": 0.08,
+        "revenue_growth_weak": 0.03,
+        "note": "15%+ είναι εξαιρετικό για consumer"
+      },
+      "valuation": {
+        "pe_cheap": 20,
+        "pe_fair": 30,
+        "pe_expensive": 45,
+        "ev_ebitda_cheap": 12,
+        "ev_ebitda_fair": 20,
+        "ev_ebitda_expensive": 30,
+        "note": "Παραδοσιακά P/E και EV/EBITDA"
+      },
+      "eva": {
+        "roic_strong": 0.20,
+        "roic_ok": 0.12,
+        "roic_weak": 0.06,
+        "note": "Asset-light models έχουν υψηλότερο ROIC"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.25,
+        "from_52w_high_deep_value": -0.40
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "healthcare_biotech": {
+      "_label": "Healthcare / Biotech",
+      "moat": {
+        "gross_margin_strong": 70,
+        "gross_margin_ok": 55,
+        "gross_margin_weak": 40,
+        "note": "Patents και FDA approval barriers"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.20,
+        "revenue_growth_ok": 0.10,
+        "revenue_growth_weak": 0.05,
+        "note": "Pipeline depth πιο σημαντικό από current growth"
+      },
+      "valuation": {
+        "pe_cheap": 15,
+        "pe_fair": 25,
+        "pe_expensive": 40,
+        "ev_ebitda_cheap": 10,
+        "ev_ebitda_fair": 18,
+        "ev_ebitda_expensive": 30,
+        "note": "Biotech συχνά αξιολογείται σε pipeline value"
+      },
+      "eva": {
+        "roic_strong": 0.20,
+        "roic_ok": 0.12,
+        "roic_weak": 0.05,
+        "note": "R&D intensity μειώνει βραχυπρόθεσμα ROIC"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.25,
+        "from_52w_high_deep_value": -0.50
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "energy": {
+      "_label": "Energy / Commodities",
+      "moat": {
+        "gross_margin_strong": 40,
+        "gross_margin_ok": 30,
+        "gross_margin_weak": 20,
+        "note": "Commodity business — χαμηλό moat, price-taker"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.10,
+        "revenue_growth_ok": 0.05,
+        "revenue_growth_weak": 0.00,
+        "note": "FCF yield πιο σημαντικό από revenue growth"
+      },
+      "valuation": {
+        "pe_cheap": 10,
+        "pe_fair": 15,
+        "pe_expensive": 20,
+        "ev_ebitda_cheap": 4,
+        "ev_ebitda_fair": 7,
+        "ev_ebitda_expensive": 10,
+        "note": "Χαμηλά multiples — focus σε FCF yield και dividend"
+      },
+      "eva": {
+        "roic_strong": 0.15,
+        "roic_ok": 0.08,
+        "roic_weak": 0.04,
+        "note": "ROIC πάνω από cost of capital (~7%) αρκεί"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.20,
+        "from_52w_high_deep_value": -0.35
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "mega_cap_tech": {
+      "_label": "Mega Cap Tech",
+      "moat": {
+        "gross_margin_strong": 50,
+        "gross_margin_ok": 40,
+        "gross_margin_weak": 30,
+        "note": "Ecosystem lock-in, network effects, data moat"
+      },
+      "growth": {
+        "revenue_growth_strong": 0.15,
+        "revenue_growth_ok": 0.08,
+        "revenue_growth_weak": 0.05,
+        "note": "Για το μέγεθός τους, 10%+ είναι εντυπωσιακό"
+      },
+      "valuation": {
+        "pe_cheap": 20,
+        "pe_fair": 28,
+        "pe_expensive": 35,
+        "ev_ebitda_cheap": 15,
+        "ev_ebitda_fair": 22,
+        "ev_ebitda_expensive": 30,
+        "note": "Premium justified από moat"
+      },
+      "eva": {
+        "roic_strong": 0.30,
+        "roic_ok": 0.20,
+        "roic_weak": 0.12,
+        "note": "Mega caps έχουν συνήθως εξαιρετικό ROIC"
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.20,
+        "from_52w_high_deep_value": -0.35
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    },
+
+    "default": {
+      "_label": "Γενικό",
+      "moat": {
+        "gross_margin_strong": 50,
+        "gross_margin_ok": 35,
+        "gross_margin_weak": 20
+      },
+      "growth": {
+        "revenue_growth_strong": 0.20,
+        "revenue_growth_ok": 0.10,
+        "revenue_growth_weak": 0.05
+      },
+      "valuation": {
+        "pe_cheap": 20,
+        "pe_fair": 30,
+        "pe_expensive": 50
+      },
+      "eva": {
+        "roic_strong": 0.20,
+        "roic_ok": 0.10,
+        "roic_weak": 0.05
+      },
+      "technicals": {
+        "from_52w_high_opportunity": -0.30,
+        "from_52w_high_deep_value": -0.50
+      },
+      "thresholds": {
+        "pass": 65,
+        "watch": 80,
+        "buy": 100
+      }
+    }
+  }
+}
