@@ -20,39 +20,40 @@ MAX_TICKERS = 500
 
 
 def get_vwce_tickers():
-    print("\n📡 Source 1: VWCE holdings από justETF...")
-    urls = [
-        "https://www.justetf.com/api/etfs/holdings?isin=IE00BK5BQT80&lang=en&country=DE&currency=EUR",
-        "https://www.justetf.com/servlet/holdings?isin=IE00BK5BQT80&lang=en",
-        "https://www.justetf.com/en/etf-profile.html?isin=IE00BK5BQT80",
-    ]
-    for url in urls:
-        try:
-            req = urllib.request.Request(url, headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                content = resp.read().decode("utf-8")
-            try:
-                data = json.loads(content)
-                if isinstance(data, dict) and "holdings" in data:
-                    tickers = [h.get("ticker") or h.get("symbol") for h in data["holdings"] if h.get("ticker") or h.get("symbol")]
-                    tickers = [t for t in tickers if t]
-                    if len(tickers) > 100:
-                        print(f"  ✅ SUCCESS — {len(tickers)} tickers από justETF JSON")
-                        return tickers, True
-            except:
-                pass
-            tickers = re.findall(r'"ticker"\s*:\s*"([A-Z]{1,5})"', content)
-            if not tickers:
-                tickers = re.findall(r'data-ticker="([A-Z]{1,5})"', content)
-            if len(tickers) > 100:
-                tickers = list(dict.fromkeys(tickers))
-                print(f"  ✅ SUCCESS — {len(tickers)} tickers από justETF HTML")
-                return tickers, True
-        except Exception as e:
-            print(f"  ⚠️ URL failed: {e}")
-            continue
-    print("  ❌ FAILED — justETF δεν ήταν προσβάσιμο")
-    return [], False
+    print("\n📡 Source 1: VWCE holdings από justetf-scraping...")
+    try:
+        import justetf_scraping
+        overview = justetf_scraping.get_etf_overview("IE00BK5BQT80")
+        
+        # Top holdings από library
+        holdings = overview.get("top_holdings", [])
+        tickers = []
+        for h in holdings:
+            isin = h.get("isin", "")
+            name = h.get("name", "")
+            # Convert ISIN to ticker via yfinance
+            if isin:
+                try:
+                    stock = yf.Ticker(isin)
+                    info = stock.info
+                    symbol = info.get("symbol")
+                    if symbol:
+                        tickers.append(symbol)
+                except:
+                    pass
+        
+        if len(tickers) > 5:
+            print(f"  ✅ SUCCESS — {len(tickers)} tickers από justetf-scraping")
+            return tickers, True
+        else:
+            print(f"  ⚠️ Μόνο {len(tickers)} tickers — library δίνει top 10 μόνο")
+            return tickers, False
+    except ImportError:
+        print("  ❌ FAILED — justetf-scraping not installed")
+        return [], False
+    except Exception as e:
+        print(f"  ❌ FAILED — {e}")
+        return [], False
 
 
 def get_sp500_tickers():
