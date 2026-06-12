@@ -29,7 +29,7 @@ WIKIPEDIA_INDICES = {
     },
     "FTSE 100 🇬🇧": {
         "url": "https://en.wikipedia.org/wiki/FTSE_100",
-        "ticker_col": 1,
+        "ticker_col": 0,
         "suffix": ".L",
     },
     "DAX 🇩🇪": {
@@ -90,7 +90,7 @@ def parse_wikipedia_table(html, ticker_col=0, suffix=""):
             clean = clean.split()[0] if clean.split() else ""
             
             # Validate ticker format
-            if clean and re.match(r'^[A-Z0-9]{1,6}$', clean):
+            if clean and re.match(r'^[A-Z]{1,6}$', clean):
                 ticker = clean + suffix
                 tickers.append(ticker)
     
