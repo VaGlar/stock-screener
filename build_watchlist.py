@@ -22,11 +22,6 @@ MAX_TICKERS = 2000
 # ── Wikipedia Index Sources ───────────────────────────────────────
 
 WIKIPEDIA_INDICES = {
-    "S&P 500 🇺🇸": {
-        "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
-        "ticker_col": 0,  # Column index για ticker
-        "suffix": "",     # US stocks δεν χρειάζονται suffix
-    },
     "FTSE 100 🇬🇧": {
         "url": "https://en.wikipedia.org/wiki/FTSE_100",
         "ticker_col": 0,
