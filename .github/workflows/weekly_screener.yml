@@ -2,8 +2,8 @@ name: Weekly Stock Screener
 
 on:
   schedule:
-    # Κάθε Δευτέρα στις 08:00 ώρα Ελλάδας (06:00 UTC)
-    - cron: "0 6 * * 1"
+    # Κάθε Δευτέρα στις 07:00 ώρα Ελλάδας (04:00 UTC)
+    - cron: "0 4 * * 1"
   workflow_dispatch:
 
 jobs:
