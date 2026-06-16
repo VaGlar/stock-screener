@@ -9,6 +9,7 @@ Sources:
 import yfinance as yf
 import json
 import time
+
 import re
 import csv
 import io
@@ -186,44 +187,6 @@ def get_yahoo_screens():
         return all_tickers, True
     print("  ❌ FAILED — Κανένα Yahoo screen δεν δούλεψε")
     return [], False
-
-
-# ── Quick scoring ─────────────────────────────────────────────────
-
-def get_basic_info(ticker):
-    try:
-        stock = yf.Ticker(ticker)
-        info = stock.info
-        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
-        week52_high = info.get("fiftyTwoWeekHigh")
-        target_price = info.get("targetMeanPrice")
-        revenue_growth = info.get("revenueGrowth")
-        recommendation = info.get("recommendationKey", "")
-        pe = info.get("trailingPE")
-
-        if not current_price or not week52_high:
-            return None
-
-        pct_from_high = (current_price - week52_high) / week52_high
-        analyst_upside = ((target_price - current_price) / current_price) if target_price else 0
-
-        score = 0
-        if pct_from_high <= -0.25: score += 2
-        if analyst_upside >= 0.20: score += 2
-        if recommendation in ["strongBuy", "buy"]: score += 1
-        if revenue_growth and revenue_growth >= 0.15: score += 1
-        if pe and 0 < pe <= 25: score += 1
-
-        return {
-            "symbol": ticker, "score": score,
-            "pct_from_high": pct_from_high,
-            "analyst_upside": analyst_upside,
-            "recommendation": recommendation,
-            "screens": [], "priority": 1
-        }
-    except:
-        return None
-
 
 # ── Main ──────────────────────────────────────────────────────────
 
