@@ -52,49 +52,36 @@ WIKI_INDICES = {
         "url": "https://en.wikipedia.org/wiki/FTSE_100",
         "col": "Ticker",
         "suffix": ".L",
-        "table_idx": 4,  # Ποιο table στη σελίδα (0-indexed)
+        "table_idx": 6,
+        "has_suffix": False,  # Tickers χωρίς suffix — θα προσθέσουμε .L
     },
     "DAX 🇩🇪": {
         "url": "https://en.wikipedia.org/wiki/DAX",
         "col": "Ticker",
-        "suffix": ".DE",
-        "table_idx": 3,
+        "suffix": "",
+        "table_idx": 4,
+        "has_suffix": True,  # Tickers ήδη έχουν .DE
     },
     "CAC 40 🇫🇷": {
         "url": "https://en.wikipedia.org/wiki/CAC_40",
         "col": "Ticker",
         "suffix": ".PA",
-        "table_idx": 2,
+        "table_idx": 4,
+        "has_suffix": False,
     },
     "Eurostoxx 50 🇪🇺": {
         "url": "https://en.wikipedia.org/wiki/Euro_Stoxx_50",
         "col": "Ticker",
         "suffix": "",
         "table_idx": 3,
-    },
-    "ASX 200 🇦🇺": {
-        "url": "https://en.wikipedia.org/wiki/S%26P/ASX_200",
-        "col": "Code",
-        "suffix": ".AX",
-        "table_idx": 2,
-    },
-    "Hang Seng 🇭🇰": {
-        "url": "https://en.wikipedia.org/wiki/Hang_Seng_Index",
-        "col": "Ticker",
-        "suffix": "",
-        "table_idx": 2,
-    },
-    "Nikkei 225 🇯🇵": {
-        "url": "https://en.wikipedia.org/wiki/Nikkei_225",
-        "col": "Ticker symbol",
-        "suffix": ".T",
-        "table_idx": 2,
+        "has_suffix": True,  # Tickers ήδη έχουν .DE, .FR κλπ
     },
     "BSE Sensex 🇮🇳": {
         "url": "https://en.wikipedia.org/wiki/BSE_SENSEX",
         "col": "Symbol",
-        "suffix": ".BO",
-        "table_idx": 1,
+        "suffix": "",
+        "table_idx": 2,
+        "has_suffix": True,  # Tickers ήδη έχουν .BO
     },
 }
 
@@ -110,55 +97,58 @@ def get_wikipedia_tickers():
 
     for name, cfg in WIKI_INDICES.items():
         try:
-            # Κατέβασε HTML
             req = urllib.request.Request(cfg["url"], headers=HEADERS)
             with urllib.request.urlopen(req, timeout=15) as resp:
                 html = resp.read().decode("utf-8")
 
-            # Parse όλα τα tables
             tables = pd.read_html(io.StringIO(html))
-
             tickers = []
 
-            # Πρώτα δοκίμασε το συγκεκριμένο table_idx
-            indices_to_try = [cfg["table_idx"]] + list(range(len(tables)))
+            # Δοκίμασε πρώτα το configured table_idx, μετά όλα τα tables
+            indices_to_try = [cfg["table_idx"]] + [i for i in range(len(tables)) if i != cfg["table_idx"]]
 
             for idx in indices_to_try:
                 if idx >= len(tables):
                     continue
                 table = tables[idx]
 
-                # Ψάξε τη στήλη με ticker
+                # Ψάξε τη στήλη
                 col_found = None
                 for col in table.columns:
-                    col_str = str(col).strip()
-                    if col_str == cfg["col"]:
+                    if str(col).strip() == cfg["col"]:
                         col_found = col
                         break
-                    # Fallback — ψάξε partial match
-                    if any(k in col_str.lower() for k in ["ticker", "symbol", "code"]):
-                        col_found = col
 
-                if col_found is not None:
-                    raw = table[col_found].dropna().astype(str).tolist()
-                    # Καθαρό validation — μόνο αλφαβητικά, 2-6 chars
-                    clean = []
-                    for t in raw:
-                        t = t.strip().split()[0]  # Πάρε πρώτη λέξη
-                        t = re.sub(r'[^A-Z0-9]', '', t.upper())  # Κράτα μόνο alphanumeric
-                        if re.match(r'^[A-Z]{2,6}$', t):  # Μόνο γράμματα, 2-6 chars
-                            clean.append(t + cfg["suffix"])
+                if col_found is None:
+                    continue
 
-                    if len(clean) >= 10:
-                        tickers = clean
-                        break
+                raw = table[col_found].dropna().astype(str).tolist()
+                clean = []
+                for t in raw:
+                    t = t.strip().split()[0]  # Πρώτη λέξη μόνο
+
+                    if cfg.get("has_suffix"):
+                        # Ticker ήδη έχει suffix (π.χ. ADS.DE, ADANIPORTS.BO)
+                        # Κράτα ως έχει αν έχει valid format
+                        if re.match(r'^[A-Z][A-Z0-9]{1,9}(\.[A-Z]{1,3})?$', t):
+                            clean.append(t)
+                    else:
+                        # Ticker χωρίς suffix — πρόσθεσε το suffix
+                        t_clean = re.sub(r'[^A-Z0-9]', '', t.upper())
+                        if re.match(r'^[A-Z]{2,6}$', t_clean):
+                            clean.append(t_clean + cfg["suffix"])
+
+                if len(clean) >= 10:
+                    tickers = clean
+                    print(f"  ✅ {name}: {len(tickers)} tickers (table {idx}, col '{cfg['col']}')")
+                    print(f"     Sample: {tickers[:3]}")
+                    break
 
             if tickers:
                 all_tickers.extend(tickers)
                 success_count += 1
-                print(f"  ✅ {name}: {len(tickers)} tickers")
             else:
-                print(f"  ⚠️ {name}: δεν βρέθηκε στήλη ticker")
+                print(f"  ⚠️ {name}: δεν βρέθηκε στήλη '{cfg['col']}'")
 
             time.sleep(1)
 
