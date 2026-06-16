@@ -251,24 +251,30 @@ def build_watchlist():
     all_ordered = all_ordered[:MAX_TICKERS]
     print(f"\n📋 Σύνολο unique tickers για ανάλυση: {len(all_ordered)}")
 
-    print(f"\n⚡ Quick scoring...")
-    all_results = {}
-    for i, ticker in enumerate(all_ordered, 1):
-        if i % 50 == 0:
-            print(f"  [{i}/{len(all_ordered)}]...")
-        result = get_basic_info(ticker)
-        if result and result["score"] >= 2:
-            if ticker not in all_results:
-                all_results[ticker] = result
-            else:
-                all_results[ticker]["priority"] += 1
-            if ticker in yahoo_tickers:
-                all_results[ticker]["screens"].append("yahoo")
-            if ticker in wiki_tickers:
-                all_results[ticker]["screens"].append("wikipedia")
-            if ticker in sp500_tickers:
-                all_results[ticker]["screens"].append("sp500")
-        time.sleep(0.3)
+    print(f"\n⚡ Building watchlist (no pre-filtering)...")
+all_results = {}
+for i, ticker in enumerate(all_ordered, 1):
+    if i % 50 == 0:
+        print(f"  [{i}/{len(all_ordered)}]...")
+    # Βάζουμε όλες τις μετοχές — το 7-pillar θα κρίνει
+    all_results[ticker] = {
+        "symbol": ticker,
+        "score": 0,
+        "pct_from_high": None,
+        "analyst_upside": None,
+        "recommendation": "",
+        "screens": [],
+        "priority": 1
+    }
+    # Tag source
+    if ticker in yahoo_tickers:
+        all_results[ticker]["screens"].append("yahoo")
+        all_results[ticker]["priority"] += 1
+    if ticker in wiki_tickers:
+        all_results[ticker]["screens"].append("wikipedia")
+    if ticker in sp500_tickers:
+        all_results[ticker]["screens"].append("sp500")
+        all_results[ticker]["priority"] += 1
 
     sorted_results = sorted(
         all_results.values(),
