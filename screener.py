@@ -74,7 +74,7 @@ def get_sector_config(info, config):
 
 # ── Data ──────────────────────────────────────────────────────────
 
-def get_stock_data(ticker):
+def get_stock_data(ticker, retries=1,delay=3):
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
@@ -180,6 +180,10 @@ def get_stock_data(ticker):
             "pct_vs_200dma": (current_price - dma200) / dma200,
         }
     except Exception as e:
+        if attempt < retries:
+                print(f"  ⚠️ {ticker} error, retry {attempt+1}/{retries}: {e}")
+                time.sleep(delay * (attempt + 1))
+                continue
         print(f"  ⚠️ Error {ticker}: {e}")
         return None
 
@@ -556,7 +560,7 @@ def main():
         else:
             if not passes:
                 print(f"  ❌ {ticker} cut — {failed_pillar} below minimum")
-        time.sleep(0.2)
+        time.sleep(0.5)
 
     print(f"\n✅ {len(results)} stocks passed filters")
     html = build_html_report(results, watchlist_data)
