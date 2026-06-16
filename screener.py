@@ -18,7 +18,17 @@ SENDER_EMAIL = "vasilisglaros@gmail.com"
 RECEIVER_EMAIL = "vasilisglaros@gmail.com"
 EMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 MAX_TICKERS = 2000
-MAX_REPORT = 30  # Μέγιστες μετοχές στο report
+MAX_REPORT = 30
+
+
+# ── Safe float helper ─────────────────────────────────────────────
+
+def sf(val):
+    """Safe float conversion — αποφεύγει TypeError από string values"""
+    try:
+        return float(val) if val is not None else None
+    except (ValueError, TypeError):
+        return None
 
 
 # ── Config ────────────────────────────────────────────────────────
@@ -28,8 +38,28 @@ def load_config():
         with open("sector_config.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print("❌ sector_config.json not found!")
-        return {}
+        print("⚠️ sector_config.json not found — using defaults")
+        return {
+            "industry_mapping": {
+                "Software—Application": "saas_cloud",
+                "Software—Infrastructure": "saas_cloud",
+                "Semiconductors": "semiconductors",
+                "Biotechnology": "healthcare_biotech",
+                "Drug Manufacturers—General": "healthcare_biotech",
+                "Oil & Gas E&P": "energy",
+                "Oil & Gas Integrated": "energy",
+                "Beverages—Non-Alcoholic": "consumer_beverages",
+            },
+            "sector_mapping": {
+                "Technology": "saas_cloud",
+                "Healthcare": "healthcare_biotech",
+                "Energy": "energy",
+                "Consumer Cyclical": "consumer_beverages",
+                "Consumer Defensive": "consumer_beverages",
+                "Communication Services": "mega_cap_tech",
+            },
+            "sectors": {}
+        }
 
 
 def get_sector_config(info, config):
@@ -49,7 +79,7 @@ def get_stock_data(ticker):
         stock = yf.Ticker(ticker)
         info = stock.info
 
-        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+        current_price = sf(info.get("currentPrice") or info.get("regularMarketPrice"))
         if not current_price:
             return None
 
@@ -58,11 +88,8 @@ def get_stock_data(ticker):
             return None
 
         closes = hist["Close"]
-
-        # 200DMA
         dma200 = float(closes.rolling(200).mean().iloc[-1]) if len(closes) >= 200 else float(closes.mean())
 
-        # RSI 14-day
         delta = closes.diff()
         gain = delta.clip(lower=0).rolling(14).mean()
         loss = (-delta.clip(upper=0)).rolling(14).mean()
@@ -86,7 +113,7 @@ def get_stock_data(ticker):
         except:
             rev_accelerating = None
 
-        # ROIC + trend
+        # ROIC
         try:
             q_income = stock.quarterly_financials
             q_balance = stock.quarterly_balance_sheet
@@ -109,17 +136,15 @@ def get_stock_data(ticker):
             roic_current = None
             roic_trend_improving = None
 
-        # FCF Yield
-        fcf = info.get("freeCashflow")
-        market_cap = info.get("marketCap")
+        fcf = sf(info.get("freeCashflow"))
+        market_cap = sf(info.get("marketCap"))
         fcf_yield = (fcf / market_cap) if (fcf and market_cap and market_cap > 0) else None
 
-        # WACC + ROIC spread
-        beta = info.get("beta", 1.0) or 1.0
+        beta = sf(info.get("beta")) or 1.0
         wacc = 0.045 + beta * 0.055
         roic_wacc_spread = (roic_current - wacc) if roic_current else None
 
-        week52_high = info.get("fiftyTwoWeekHigh")
+        week52_high = sf(info.get("fiftyTwoWeekHigh"))
 
         return {
             "ticker": ticker,
@@ -128,27 +153,27 @@ def get_stock_data(ticker):
             "industry": info.get("industry", "N/A"),
             "price": current_price,
             "52w_high": week52_high,
-            "52w_low": info.get("fiftyTwoWeekLow"),
+            "52w_low": sf(info.get("fiftyTwoWeekLow")),
             "market_cap": market_cap,
-            "target_price": info.get("targetMeanPrice"),
-            "num_analysts": info.get("numberOfAnalystOpinions", 0),
+            "target_price": sf(info.get("targetMeanPrice")),
+            "num_analysts": info.get("numberOfAnalystOpinions", 0) or 0,
             "recommendation": info.get("recommendationKey", "N/A"),
-            "pe": info.get("trailingPE"),
-            "forward_pe": info.get("forwardPE"),
-            "ev_ebitda": info.get("enterpriseToEbitda"),
-            "ev_revenue": info.get("enterpriseToRevenue"),
-            "peg": info.get("pegRatio"),
+            "pe": sf(info.get("trailingPE")),
+            "forward_pe": sf(info.get("forwardPE")),
+            "ev_ebitda": sf(info.get("enterpriseToEbitda")),
+            "ev_revenue": sf(info.get("enterpriseToRevenue")),
+            "peg": sf(info.get("pegRatio")),
             "fcf_yield": fcf_yield,
-            "revenue_growth": info.get("revenueGrowth"),
-            "earnings_growth": info.get("earningsGrowth"),
+            "revenue_growth": sf(info.get("revenueGrowth")),
+            "earnings_growth": sf(info.get("earningsGrowth")),
             "rev_accelerating": rev_accelerating,
             "roic": roic_current,
             "roic_trend_improving": roic_trend_improving,
             "roic_wacc_spread": roic_wacc_spread,
             "wacc": wacc,
-            "gross_margin": info.get("grossMargins"),
-            "operating_margin": info.get("operatingMargins"),
-            "debt_equity": info.get("debtToEquity"),
+            "gross_margin": sf(info.get("grossMargins")),
+            "operating_margin": sf(info.get("operatingMargins")),
+            "debt_equity": sf(info.get("debtToEquity")),
             "dma200": dma200,
             "rsi": rsi,
             "pct_from_high": (current_price - week52_high) / week52_high if week52_high else None,
@@ -169,12 +194,12 @@ def score_stock(data, sector_cfg):
     moat_cfg = sector_cfg.get("moat", {})
     s, f = 0, []
     gm = data.get("gross_margin")
-    if gm:
+    if gm and isinstance(gm, (int, float)):
         if gm >= moat_cfg.get("gross_margin_strong", 0.50): s += 15; f.append(f"✅ Gross margin {gm:.0%}")
         elif gm >= moat_cfg.get("gross_margin_ok", 0.35): s += 8; f.append(f"🟡 Gross margin {gm:.0%}")
         else: f.append(f"🔴 Gross margin {gm:.0%}")
     om = data.get("operating_margin")
-    if om:
+    if om and isinstance(om, (int, float)):
         if om >= 0.20: s += 10; f.append(f"✅ Op margin {om:.0%}")
         elif om >= 0.10: s += 5; f.append(f"🟡 Op margin {om:.0%}")
         elif om > 0: s += 2; f.append(f"🔴 Op margin {om:.0%}")
@@ -185,13 +210,13 @@ def score_stock(data, sector_cfg):
     growth_cfg = sector_cfg.get("growth", {})
     s, f = 0, []
     rg = data.get("revenue_growth")
-    if rg:
+    if rg and isinstance(rg, (int, float)):
         if rg >= growth_cfg.get("revenue_growth_strong", 0.20): s += 15; f.append(f"🚀 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_ok", 0.10): s += 8; f.append(f"📈 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_weak", 0.05): s += 3; f.append(f"🟡 Rev growth {rg:.0%}")
         else: f.append(f"🔴 Rev growth {rg:.0%}")
     eg = data.get("earnings_growth")
-    if eg and eg > 0:
+    if eg and isinstance(eg, (int, float)) and eg > 0:
         if eg >= 0.25: s += 8; f.append(f"🚀 EPS growth {eg:.0%}")
         elif eg >= 0.10: s += 4; f.append(f"📈 EPS growth {eg:.0%}")
     if data.get("rev_accelerating") is True: s += 7; f.append("⚡ Revenue accelerating QoQ")
@@ -202,19 +227,19 @@ def score_stock(data, sector_cfg):
     val_cfg = sector_cfg.get("valuation", {})
     s, f = 0, []
     pe = data.get("pe")
-    if pe and pe > 0:
+    if pe and isinstance(pe, (int, float)) and pe > 0:
         if pe <= val_cfg.get("pe_cheap", 20): s += 7; f.append(f"💰 P/E {pe:.1f}x (cheap)")
         elif pe <= val_cfg.get("pe_fair", 30): s += 4; f.append(f"🟡 P/E {pe:.1f}x (fair)")
         else: f.append(f"🔴 P/E {pe:.1f}x")
     ev_eb = data.get("ev_ebitda")
-    if ev_eb and ev_eb > 0:
+    if ev_eb and isinstance(ev_eb, (int, float)) and ev_eb > 0:
         if ev_eb <= val_cfg.get("ev_ebitda_cheap", 12): s += 6; f.append(f"💰 EV/EBITDA {ev_eb:.1f}x")
         elif ev_eb <= val_cfg.get("ev_ebitda_fair", 20): s += 3; f.append(f"🟡 EV/EBITDA {ev_eb:.1f}x")
     peg = data.get("peg")
-    if peg and 0 < peg <= 1.0: s += 4; f.append(f"💰 PEG {peg:.1f}")
-    elif peg and peg <= 2.0: s += 2; f.append(f"🟡 PEG {peg:.1f}")
+    if peg and isinstance(peg, (int, float)) and 0 < peg <= 1.0: s += 4; f.append(f"💰 PEG {peg:.1f}")
+    elif peg and isinstance(peg, (int, float)) and peg <= 2.0: s += 2; f.append(f"🟡 PEG {peg:.1f}")
     fcf = data.get("fcf_yield")
-    if fcf:
+    if fcf and isinstance(fcf, (int, float)):
         if fcf >= 0.05: s += 3; f.append(f"💰 FCF yield {fcf:.1%}")
         elif fcf >= 0.02: s += 1; f.append(f"🟡 FCF yield {fcf:.1%}")
     scores["valuation"], flags["valuation"] = min(s, 20), f
@@ -224,11 +249,11 @@ def score_stock(data, sector_cfg):
     s, f = 0, []
     roic = data.get("roic")
     spread = data.get("roic_wacc_spread")
-    if roic:
+    if roic and isinstance(roic, (int, float)):
         if roic >= eva_cfg.get("roic_strong", 0.20): s += 10; f.append(f"✅ ROIC {roic:.1%}")
         elif roic >= eva_cfg.get("roic_ok", 0.10): s += 5; f.append(f"🟡 ROIC {roic:.1%}")
         else: f.append(f"🔴 ROIC {roic:.1%}")
-    if spread:
+    if spread and isinstance(spread, (int, float)):
         if spread > 0.05: s += 7; f.append(f"✅ ROIC-WACC +{spread:.1%}")
         elif spread > 0: s += 3; f.append(f"🟡 ROIC-WACC +{spread:.1%}")
         else: f.append(f"🔴 ROIC < WACC")
@@ -239,60 +264,66 @@ def score_stock(data, sector_cfg):
     tech_cfg = sector_cfg.get("technicals", {})
     s, f = 0, []
     pct_high = data.get("pct_from_high")
-    if pct_high:
+    if pct_high and isinstance(pct_high, (int, float)):
         if pct_high <= tech_cfg.get("from_52w_high_deep_value", -0.50): s += 6; f.append(f"📉 -{abs(pct_high):.0%} (deep value)")
         elif pct_high <= tech_cfg.get("from_52w_high_opportunity", -0.30): s += 4; f.append(f"📉 -{abs(pct_high):.0%} από high")
         elif pct_high >= -0.05: s += 1; f.append(f"📈 Κοντά στο high")
     pct_dma = data.get("pct_vs_200dma")
-    if pct_dma is not None:
+    if pct_dma is not None and isinstance(pct_dma, (int, float)):
         if -0.05 <= pct_dma <= 0.10: s += 4; f.append(f"✅ Κοντά στο 200DMA ({pct_dma:+.1%})")
         elif pct_dma < -0.05: s += 2; f.append(f"⚠️ Κάτω από 200DMA ({pct_dma:+.1%})")
         else: s += 1; f.append(f"📈 Πάνω από 200DMA ({pct_dma:+.1%})")
     rsi = data.get("rsi")
-    if rsi:
+    if rsi and isinstance(rsi, (int, float)):
         if rsi <= 30: s += 5; f.append(f"🟢 RSI {rsi:.0f} (oversold)")
         elif rsi <= 45: s += 3; f.append(f"🟡 RSI {rsi:.0f}")
         elif rsi >= 70: f.append(f"🔴 RSI {rsi:.0f} (overbought)")
         else: s += 1; f.append(f"RSI {rsi:.0f}")
     scores["technicals"], flags["technicals"] = min(s, 15), f
 
-    # 6. SAM /15 — quantitative proxy
+    # 6. SAM /15
     s, f = 0, []
-    mc = data.get("market_cap", 0) or 0
-    rg = data.get("revenue_growth", 0) or 0
-    if mc < 2e9: s += 5; f.append("🌍 Small cap — μεγάλο TAM headroom")
-    elif mc < 10e9: s += 3; f.append("🌍 Mid cap — TAM runway")
+    mc = data.get("market_cap") or 0
+    rg = data.get("revenue_growth") or 0
+    if isinstance(mc, (int, float)):
+        if mc < 2e9: s += 5; f.append("🌍 Small cap — μεγάλο TAM headroom")
+        elif mc < 10e9: s += 3; f.append("🌍 Mid cap — TAM runway")
     industry = data.get("industry", "")
-    if any(x in industry for x in ["Software", "Semiconductor", "Biotech", "Internet"]): s += 5; f.append(f"🌍 High-growth industry")
-    elif any(x in industry for x in ["Healthcare", "Technology", "Energy"]): s += 3; f.append(f"🌍 Growth industry")
-    if rg >= 0.20: s += 5; f.append(f"🌍 Rev growth proxy SAM")
-    elif rg >= 0.10: s += 3
+    if any(x in industry for x in ["Software", "Semiconductor", "Biotech", "Internet"]): s += 5; f.append("🌍 High-growth industry")
+    elif any(x in industry for x in ["Healthcare", "Technology", "Energy"]): s += 3; f.append("🌍 Growth industry")
+    if isinstance(rg, (int, float)):
+        if rg >= 0.20: s += 5; f.append("🌍 Rev growth proxy SAM")
+        elif rg >= 0.10: s += 3
     scores["sam"], flags["sam"] = min(s, 15), f
 
-    # 7. CATALYST /15 — quantitative proxy
+    # 7. CATALYST /15
     s, f = 0, []
-    rsi = data.get("rsi", 50) or 50
-    pct_high = data.get("pct_from_high", 0) or 0
-    num_analysts = data.get("num_analysts", 0) or 0
+    rsi = data.get("rsi") or 50
+    pct_high = data.get("pct_from_high") or 0
+    num_analysts = data.get("num_analysts") or 0
     target = data.get("target_price")
     price = data.get("price")
-    upside = ((target - price) / price) if (target and price) else 0
-    if rsi <= 35: s += 5; f.append("🎯 RSI oversold — reversal catalyst")
-    elif rsi <= 45: s += 3; f.append("🎯 RSI neutral-low")
-    if upside >= 0.30: s += 5; f.append(f"🎯 Analyst upside {upside:.0%}")
-    elif upside >= 0.15: s += 3; f.append(f"🎯 Analyst upside {upside:.0%}")
-    if num_analysts >= 15: s += 3; f.append(f"🎯 {num_analysts} analysts covering")
-    elif num_analysts >= 8: s += 2
-    if pct_high <= -0.40: s += 2; f.append("🎯 Deep value — mean reversion")
+    upside = 0
+    if target and price and isinstance(target, (int, float)) and isinstance(price, (int, float)):
+        upside = (target - price) / price
+    if isinstance(rsi, (int, float)):
+        if rsi <= 35: s += 5; f.append("🎯 RSI oversold — reversal catalyst")
+        elif rsi <= 45: s += 3; f.append("🎯 RSI neutral-low")
+    if isinstance(upside, (int, float)):
+        if upside >= 0.30: s += 5; f.append(f"🎯 Analyst upside {upside:.0%}")
+        elif upside >= 0.15: s += 3; f.append(f"🎯 Analyst upside {upside:.0%}")
+    if isinstance(num_analysts, (int, float)):
+        if num_analysts >= 15: s += 3; f.append(f"🎯 {num_analysts} analysts covering")
+        elif num_analysts >= 8: s += 2
+    if isinstance(pct_high, (int, float)) and pct_high <= -0.40: s += 2; f.append("🎯 Deep value — mean reversion")
     scores["catalyst"], flags["catalyst"] = min(s, 15), f
 
     total = sum(scores.values())
     return scores, flags, total
 
 
-# ── Action label ──────────────────────────────────────────────────
+# ── Minimums ──────────────────────────────────────────────────────
 
-#  threshold per pillar
 PILLAR_MINIMUMS_WATCH = {
     "moat": 8, "growth": 5, "valuation": 4,
     "eva": 3, "technicals": 3, "sam": 4, "catalyst": 3
@@ -303,7 +334,6 @@ PILLAR_MINIMUMS_BUY = {
 }
 
 def passes_minimums(scores, thresholds, total):
-    """Κόβει μετοχές που αποτυγχάνουν σε κάποιο pillar minimum"""
     if total >= thresholds.get("buy", 100):
         mins = PILLAR_MINIMUMS_BUY
     else:
@@ -312,7 +342,8 @@ def passes_minimums(scores, thresholds, total):
         if (scores.get(pillar) or 0) < min_score:
             return False, pillar
     return True, None
-    
+
+
 def get_action(score, thresholds):
     if score >= thresholds.get("buy", 100): return "STRONG BUY", "#14532d", "#dcfce7"
     if score >= thresholds.get("watch", 80): return "BUY", "#166534", "#f0fdf4"
@@ -321,7 +352,7 @@ def get_action(score, thresholds):
 
 
 def format_market_cap(mc):
-    if not mc: return "N/A"
+    if not mc or not isinstance(mc, (int, float)): return "N/A"
     if mc >= 1e12: return f"${mc/1e12:.1f}T"
     if mc >= 1e9: return f"${mc/1e9:.1f}B"
     return f"${mc/1e6:.0f}M"
@@ -350,15 +381,17 @@ def build_html_report(results, watchlist_meta):
             </div>
         </div>"""
 
-    # Top 5 cards
     cards_html = ""
     for r in top5:
         d = r["data"]
         total = r["total_score"]
         thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
         label, lc, lb = get_action(total, thresholds)
-        upside = f"+{((d['target_price']-d['price'])/d['price']):.0%}" if d.get('target_price') else "N/A"
-        pct_high = d.get('pct_from_high', 0) or 0
+        price = d.get('price') or 0
+        target = d.get('target_price')
+        upside = f"+{((target-price)/price):.0%}" if (target and price and isinstance(target, (int,float)) and isinstance(price, (int,float))) else "N/A"
+        pct_high = d.get('pct_from_high') or 0
+        rsi_val = d.get('rsi') or 0
 
         cards_html += f"""
         <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:14px;">
@@ -375,8 +408,8 @@ def build_html_report(results, watchlist_meta):
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px;">
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
-                    <div style="font-size:10px;color:#9ca3af">Value</div>
-                    <div style="font-size:14px;font-weight:600">${d['price']:.2f}</div>
+                    <div style="font-size:10px;color:#9ca3af">Price</div>
+                    <div style="font-size:14px;font-weight:600">${price:.2f}</div>
                 </div>
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
                     <div style="font-size:10px;color:#9ca3af">vs 52w High</div>
@@ -388,7 +421,7 @@ def build_html_report(results, watchlist_meta):
                 </div>
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
                     <div style="font-size:10px;color:#9ca3af">RSI</div>
-                    <div style="font-size:14px;font-weight:600">{d['rsi']:.0f}</div>
+                    <div style="font-size:14px;font-weight:600">{rsi_val:.0f}</div>
                 </div>
                 <div style="background:#f9fafb;border-radius:6px;padding:7px;text-align:center">
                     <div style="font-size:10px;color:#9ca3af">Mkt Cap</div>
@@ -406,22 +439,24 @@ def build_html_report(results, watchlist_meta):
             </div>
         </div>"""
 
-    # Watchlist table (6-30)
     rest_rows = ""
     for r in rest:
         d = r["data"]
         total = r["total_score"]
         thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
         label, lc, lb = get_action(total, thresholds)
-        upside = f"+{((d['target_price']-d['price'])/d['price']):.0%}" if d.get('target_price') else "N/A"
-        pct_high = d.get('pct_from_high', 0) or 0
+        price = d.get('price') or 0
+        target = d.get('target_price')
+        upside = f"+{((target-price)/price):.0%}" if (target and price and isinstance(target, (int,float)) and isinstance(price, (int,float))) else "N/A"
+        pct_high = d.get('pct_from_high') or 0
+        rsi_val = d.get('rsi') or 0
         rest_rows += f"""<tr>
             <td style="padding:7px 8px;font-weight:500">{d['ticker']}<br>
                 <small style="color:#9ca3af;font-weight:400">{d['industry'][:22]}</small></td>
-            <td style="padding:7px 8px">${d['price']:.2f}</td>
+            <td style="padding:7px 8px">${price:.2f}</td>
             <td style="padding:7px 8px;color:#dc2626">{pct_high:.0%}</td>
             <td style="padding:7px 8px;color:#16a34a">{upside}</td>
-            <td style="padding:7px 8px">{d['rsi']:.0f}</td>
+            <td style="padding:7px 8px">{rsi_val:.0f}</td>
             <td style="padding:7px 8px">{format_market_cap(d['market_cap'])}</td>
             <td style="padding:7px 8px;font-weight:600">{total}/145</td>
             <td style="padding:7px 8px">
@@ -437,7 +472,7 @@ def build_html_report(results, watchlist_meta):
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
                     <th style="padding:7px 8px;text-align:left">Stock</th>
-                    <th style="padding:7px 8px;text-align:left">Value</th>
+                    <th style="padding:7px 8px;text-align:left">Price</th>
                     <th style="padding:7px 8px;text-align:left">vs 52w</th>
                     <th style="padding:7px 8px;text-align:left">Upside</th>
                     <th style="padding:7px 8px;text-align:left">RSI</th>
@@ -456,9 +491,12 @@ def build_html_report(results, watchlist_meta):
             {date_str} · {total_scanned} stocks scanned · Top {MAX_REPORT}
         </div>
     </div>
-    <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week </div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
     {rest_html}
+    <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
+        ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
+    </div>
     </body></html>"""
 
 
