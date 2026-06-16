@@ -9,137 +9,70 @@ Sources:
 import yfinance as yf
 import json
 import time
-
 import re
 import csv
 import io
 import urllib.request
 from datetime import datetime
-from html.parser import HTMLParser
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 MAX_TICKERS = 2000
 
-# ── Wikipedia Index Sources ───────────────────────────────────────
-
 WIKIPEDIA_INDICES = {
-    "FTSE 100 🇬🇧": {
-        "url": "https://en.wikipedia.org/wiki/FTSE_100",
-        "ticker_col": 0,
-        "suffix": ".L",
-    },
-    "DAX 🇩🇪": {
-        "url": "https://en.wikipedia.org/wiki/DAX",
-        "ticker_col": 1,
-        "suffix": ".DE",
-    },
-    "CAC 40 🇫🇷": {
-        "url": "https://en.wikipedia.org/wiki/CAC_40",
-        "ticker_col": 2,
-        "suffix": ".PA",
-    },
-    "Eurostoxx 50 🇪🇺": {
-        "url": "https://en.wikipedia.org/wiki/Euro_Stoxx_50",
-        "ticker_col": 2,
-        "suffix": "",
-    },
-    "ASX 200 🇦🇺": {
-        "url": "https://en.wikipedia.org/wiki/S%26P/ASX_200",
-        "ticker_col": 0,
-        "suffix": ".AX",
-    },
-    "Hang Seng 🇭🇰": {
-        "url": "https://en.wikipedia.org/wiki/Hang_Seng_Index",
-        "ticker_col": 1,
-        "suffix": ".HK",
-    },
-    "Nikkei 225 🇯🇵": {
-        "url": "https://en.wikipedia.org/wiki/Nikkei_225",
-        "ticker_col": 1,
-        "suffix": ".T",
-    },
-    "BSE Sensex 🇮🇳": {
-        "url": "https://en.wikipedia.org/wiki/BSE_SENSEX",
-        "ticker_col": 1,
-        "suffix": ".BO",
-    },
+    "FTSE 100 🇬🇧": {"url": "https://en.wikipedia.org/wiki/FTSE_100", "ticker_col": 0, "suffix": ".L"},
+    "DAX 🇩🇪": {"url": "https://en.wikipedia.org/wiki/DAX", "ticker_col": 1, "suffix": ".DE"},
+    "CAC 40 🇫🇷": {"url": "https://en.wikipedia.org/wiki/CAC_40", "ticker_col": 2, "suffix": ".PA"},
+    "Eurostoxx 50 🇪🇺": {"url": "https://en.wikipedia.org/wiki/Euro_Stoxx_50", "ticker_col": 2, "suffix": ""},
+    "ASX 200 🇦🇺": {"url": "https://en.wikipedia.org/wiki/S%26P/ASX_200", "ticker_col": 0, "suffix": ".AX"},
+    "Hang Seng 🇭🇰": {"url": "https://en.wikipedia.org/wiki/Hang_Seng_Index", "ticker_col": 1, "suffix": ".HK"},
+    "Nikkei 225 🇯🇵": {"url": "https://en.wikipedia.org/wiki/Nikkei_225", "ticker_col": 1, "suffix": ".T"},
+    "BSE Sensex 🇮🇳": {"url": "https://en.wikipedia.org/wiki/BSE_SENSEX", "ticker_col": 1, "suffix": ".BO"},
 }
 
 
 def parse_wikipedia_table(html, ticker_col=0, suffix=""):
-    """Parse HTML table από Wikipedia και επιστρέφει tickers"""
     tickers = []
-    
-    # Find all table rows
     rows = re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.DOTALL)
-    
     for row in rows:
-        # Extract cells
         cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row, re.DOTALL)
         if len(cells) > ticker_col:
             cell = cells[ticker_col]
-            # Clean HTML tags
             clean = re.sub(r'<[^>]+>', '', cell).strip()
-            # Remove citations like [1]
             clean = re.sub(r'\[\d+\]', '', clean).strip()
-            # Take first word if multiple
             clean = clean.split()[0] if clean.split() else ""
-            
-            # Validate ticker format
             if clean and re.match(r'^[A-Z]{1,6}$', clean):
-                ticker = clean + suffix
-                tickers.append(ticker)
-    
-    return list(dict.fromkeys(tickers))  # deduplicate
+                tickers.append(clean + suffix)
+    return list(dict.fromkeys(tickers))
 
 
 def get_wikipedia_tickers():
-    """Κατεβάζει tickers από Wikipedia indices"""
     print("\n📡 Source 1: Wikipedia Index Constituents...")
-    
     all_tickers = []
     success_count = 0
-    results = {}
-    
     for index_name, config in WIKIPEDIA_INDICES.items():
         try:
             req = urllib.request.Request(config["url"], headers=HEADERS)
             with urllib.request.urlopen(req, timeout=15) as resp:
                 html = resp.read().decode("utf-8")
-            
-            tickers = parse_wikipedia_table(
-                html, 
-                config["ticker_col"], 
-                config["suffix"]
-            )
-            
+            tickers = parse_wikipedia_table(html, config["ticker_col"], config["suffix"])
             if len(tickers) >= 10:
                 all_tickers.extend(tickers)
                 success_count += 1
-                results[index_name] = len(tickers)
                 print(f"  ✅ {index_name}: {len(tickers)} tickers")
             else:
                 print(f"  ⚠️ {index_name}: μόνο {len(tickers)} tickers — skip")
-            
-            time.sleep(1)  # Respectful delay
-            
+            time.sleep(1)
         except Exception as e:
             print(f"  ❌ {index_name}: {e}")
-    
     all_tickers = list(dict.fromkeys(all_tickers))
-    
     if success_count >= 3:
         print(f"  ✅ SUCCESS — {len(all_tickers)} unique tickers από {success_count} indices")
         return all_tickers, True
-    else:
-        print(f"  ❌ FAILED — Μόνο {success_count} indices πέτυχαν")
-        return all_tickers, success_count > 0
+    print(f"  ❌ FAILED — Μόνο {success_count} indices πέτυχαν")
+    return all_tickers, success_count > 0
 
-
-# ── S&P 500 GitHub fallback ───────────────────────────────────────
 
 def get_sp500_tickers():
-    """Κατεβάζει S&P 500 από GitHub dataset"""
     print("\n📡 Source 2: S&P 500 από GitHub...")
     try:
         url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
@@ -155,19 +88,11 @@ def get_sp500_tickers():
         return [], False
 
 
-# ── Yahoo Finance Screens ─────────────────────────────────────────
-
 def get_yahoo_screens():
-    """Τραβάει dynamic screens από Yahoo Finance"""
     print("\n📡 Source 3: Yahoo Finance screens...")
-    screens = [
-        "undervalued_growth_stocks",
-        "growth_technology_stocks",
-        "undervalued_large_caps",
-        "aggressive_small_caps",
-        "day_gainers",
-        "most_actives",
-    ]
+    screens = ["undervalued_growth_stocks", "growth_technology_stocks",
+               "undervalued_large_caps", "aggressive_small_caps",
+               "day_gainers", "most_actives"]
     all_tickers = []
     success_count = 0
     for screen in screens:
@@ -181,14 +106,12 @@ def get_yahoo_screens():
             time.sleep(1)
         except Exception as e:
             print(f"  ⚠️ {screen}: {e}")
-    
     if success_count > 0:
         print(f"  ✅ SUCCESS — {len(all_tickers)} tickers από {success_count} screens")
         return all_tickers, True
     print("  ❌ FAILED — Κανένα Yahoo screen δεν δούλεψε")
     return [], False
 
-# ── Main ──────────────────────────────────────────────────────────
 
 def build_watchlist():
     print(f"\n🔍 Building watchlist — {datetime.now().strftime('%d/%m/%Y %H:%M')}")
@@ -209,35 +132,32 @@ def build_watchlist():
         print("\n❌ CRITICAL: Όλες οι πηγές απέτυχαν! Abort.")
         return None
 
-    # Yahoo πρώτα (momentum), μετά Wikipedia, μετά S&P fallback
     all_ordered = list(dict.fromkeys(yahoo_tickers + wiki_tickers + sp500_tickers))
     all_ordered = all_ordered[:MAX_TICKERS]
     print(f"\n📋 Σύνολο unique tickers για ανάλυση: {len(all_ordered)}")
 
     print(f"\n⚡ Building watchlist (no pre-filtering)...")
-all_results = {}
-for i, ticker in enumerate(all_ordered, 1):
-    if i % 50 == 0:
-        print(f"  [{i}/{len(all_ordered)}]...")
-    # Βάζουμε όλες τις μετοχές — το 7-pillar θα κρίνει
-    all_results[ticker] = {
-        "symbol": ticker,
-        "score": 0,
-        "pct_from_high": None,
-        "analyst_upside": None,
-        "recommendation": "",
-        "screens": [],
-        "priority": 1
-    }
-    # Tag source
-    if ticker in yahoo_tickers:
-        all_results[ticker]["screens"].append("yahoo")
-        all_results[ticker]["priority"] += 1
-    if ticker in wiki_tickers:
-        all_results[ticker]["screens"].append("wikipedia")
-    if ticker in sp500_tickers:
-        all_results[ticker]["screens"].append("sp500")
-        all_results[ticker]["priority"] += 1
+    all_results = {}
+    for i, ticker in enumerate(all_ordered, 1):
+        if i % 50 == 0:
+            print(f"  [{i}/{len(all_ordered)}]...")
+        all_results[ticker] = {
+            "symbol": ticker,
+            "score": 0,
+            "pct_from_high": None,
+            "analyst_upside": None,
+            "recommendation": "",
+            "screens": [],
+            "priority": 1
+        }
+        if ticker in yahoo_tickers:
+            all_results[ticker]["screens"].append("yahoo")
+            all_results[ticker]["priority"] += 1
+        if ticker in wiki_tickers:
+            all_results[ticker]["screens"].append("wikipedia")
+        if ticker in sp500_tickers:
+            all_results[ticker]["screens"].append("sp500")
+            all_results[ticker]["priority"] += 1
 
     sorted_results = sorted(
         all_results.values(),
@@ -259,11 +179,11 @@ for i, ticker in enumerate(all_ordered, 1):
     with open("watchlist.json", "w") as f:
         json.dump(watchlist, f, indent=2)
 
-    print(f"\n✅ Watchlist saved: {len(sorted_results)} interesting tickers")
+    print(f"\n✅ Watchlist saved: {len(sorted_results)} tickers")
     print(f"🏆 Multi-source: {sum(1 for r in sorted_results if r['priority'] >= 2)}")
     print("\nTop 10:")
     for r in sorted_results[:10]:
-        print(f"  {r['symbol']:10} score={r['score']} upside={r['analyst_upside']:.0%} sources={r['screens']}")
+        print(f"  {r['symbol']:10} priority={r['priority']} sources={r['screens']}")
 
     return watchlist
 
