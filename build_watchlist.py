@@ -132,7 +132,7 @@ def build_watchlist():
         print("\n❌ CRITICAL: Όλες οι πηγές απέτυχαν! Abort.")
         return None
 
-    all_ordered = list(dict.fromkeys(yahoo_tickers + wiki_tickers + sp500_tickers))
+    all_ordered = list(dict.fromkeys(yahoo_tickers + sp500_tickers + wiki_tickers))
     all_ordered = all_ordered[:MAX_TICKERS]
     print(f"\n📋 Σύνολο unique tickers για ανάλυση: {len(all_ordered)}")
 
