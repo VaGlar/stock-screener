@@ -1,5 +1,5 @@
 """
-Weekly Stock Screener v3
+Weekly Stock Screener — v3
 7-Pillar scoring framework με sector-aware benchmarks
 """
 
@@ -208,15 +208,23 @@ def score_stock(data, sector_cfg):
     moat_cfg = sector_cfg.get("moat", {})
     s, f = 0, []
     gm = data.get("gross_margin")
+    om = data.get("operating_margin")
     if gm and isinstance(gm, (int, float)):
         if gm >= moat_cfg.get("gross_margin_strong", 0.50): s += 15; f.append(f"✅ Gross margin {gm:.0%}")
         elif gm >= moat_cfg.get("gross_margin_ok", 0.35): s += 8; f.append(f"🟡 Gross margin {gm:.0%}")
         else: f.append(f"🔴 Gross margin {gm:.0%}")
-    om = data.get("operating_margin")
     if om and isinstance(om, (int, float)):
         if om >= 0.20: s += 10; f.append(f"✅ Op margin {om:.0%}")
         elif om >= 0.10: s += 5; f.append(f"🟡 Op margin {om:.0%}")
         elif om > 0: s += 2; f.append(f"🔴 Op margin {om:.0%}")
+    if gm is None and om is None:
+        # Fallback proxy — max 20/30 (δεν φτάνει "εξαιρετικό")
+        rec = data.get("recommendation", "")
+        na = data.get("num_analysts") or 0
+        if rec == "strongBuy" and na >= 10: s += 15; f.append("🟡 Margins N/A — strong consensus proxy")
+        elif rec in ["strongBuy", "buy"] and na >= 5: s += 12; f.append("🟡 Margins N/A — buy consensus proxy")
+        elif rec in ["strongBuy", "buy"]: s += 8; f.append("🟡 Margins N/A — buy proxy")
+        else: s += 3; f.append("🟡 Margins N/A — neutral proxy")
     if data.get("recommendation") in ["strongBuy", "buy"]: s += 5; f.append("⭐ Strong Buy consensus")
     scores["moat"], flags["moat"] = min(s, 30), f
 
@@ -224,15 +232,23 @@ def score_stock(data, sector_cfg):
     growth_cfg = sector_cfg.get("growth", {})
     s, f = 0, []
     rg = data.get("revenue_growth")
+    eg = data.get("earnings_growth")
     if rg and isinstance(rg, (int, float)):
         if rg >= growth_cfg.get("revenue_growth_strong", 0.20): s += 15; f.append(f"🚀 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_ok", 0.10): s += 8; f.append(f"📈 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_weak", 0.05): s += 3; f.append(f"🟡 Rev growth {rg:.0%}")
         else: f.append(f"🔴 Rev growth {rg:.0%}")
-    eg = data.get("earnings_growth")
     if eg and isinstance(eg, (int, float)) and eg > 0:
         if eg >= 0.25: s += 8; f.append(f"🚀 EPS growth {eg:.0%}")
         elif eg >= 0.10: s += 4; f.append(f"📈 EPS growth {eg:.0%}")
+    if rg is None and eg is None:
+        # Fallback proxy — max 20/30
+        target = data.get("target_price")
+        price = data.get("price")
+        upside = ((target - price) / price) if (target and price) else 0
+        if upside >= 0.30: s += 15; f.append("🟡 Growth N/A — high analyst upside proxy")
+        elif upside >= 0.15: s += 10; f.append("🟡 Growth N/A — moderate upside proxy")
+        else: s += 5; f.append("🟡 Growth N/A — low upside proxy")
     if data.get("rev_accelerating") is True: s += 7; f.append("⚡ Revenue accelerating QoQ")
     elif data.get("rev_accelerating") is False: f.append("⚠️ Revenue decelerating")
     scores["growth"], flags["growth"] = min(s, 30), f
@@ -241,21 +257,27 @@ def score_stock(data, sector_cfg):
     val_cfg = sector_cfg.get("valuation", {})
     s, f = 0, []
     pe = data.get("pe")
+    ev_eb = data.get("ev_ebitda")
+    peg = data.get("peg")
+    fcf = data.get("fcf_yield")
     if pe and isinstance(pe, (int, float)) and pe > 0:
         if pe <= val_cfg.get("pe_cheap", 20): s += 7; f.append(f"💰 P/E {pe:.1f}x (cheap)")
         elif pe <= val_cfg.get("pe_fair", 30): s += 4; f.append(f"🟡 P/E {pe:.1f}x (fair)")
         else: f.append(f"🔴 P/E {pe:.1f}x")
-    ev_eb = data.get("ev_ebitda")
     if ev_eb and isinstance(ev_eb, (int, float)) and ev_eb > 0:
         if ev_eb <= val_cfg.get("ev_ebitda_cheap", 12): s += 6; f.append(f"💰 EV/EBITDA {ev_eb:.1f}x")
         elif ev_eb <= val_cfg.get("ev_ebitda_fair", 20): s += 3; f.append(f"🟡 EV/EBITDA {ev_eb:.1f}x")
-    peg = data.get("peg")
     if peg and isinstance(peg, (int, float)) and 0 < peg <= 1.0: s += 4; f.append(f"💰 PEG {peg:.1f}")
     elif peg and isinstance(peg, (int, float)) and peg <= 2.0: s += 2; f.append(f"🟡 PEG {peg:.1f}")
-    fcf = data.get("fcf_yield")
     if fcf and isinstance(fcf, (int, float)):
         if fcf >= 0.05: s += 3; f.append(f"💰 FCF yield {fcf:.1%}")
         elif fcf >= 0.02: s += 1; f.append(f"🟡 FCF yield {fcf:.1%}")
+    if pe is None and ev_eb is None and peg is None and fcf is None:
+        # Fallback proxy — max 13/20
+        pct = data.get("pct_from_high") or 0
+        if pct <= -0.40: s += 13; f.append("🟡 Valuation N/A — deep discount proxy")
+        elif pct <= -0.20: s += 9; f.append("🟡 Valuation N/A — discount proxy")
+        else: s += 5; f.append("🟡 Valuation N/A — neutral proxy")
     scores["valuation"], flags["valuation"] = min(s, 20), f
 
     # 4. EVA /20
@@ -271,6 +293,14 @@ def score_stock(data, sector_cfg):
         if spread > 0.05: s += 7; f.append(f"✅ ROIC-WACC +{spread:.1%}")
         elif spread > 0: s += 3; f.append(f"🟡 ROIC-WACC +{spread:.1%}")
         else: f.append(f"🔴 ROIC < WACC")
+    if roic is None:
+        # Fallback proxy — max 13/20
+        fcf_y = data.get("fcf_yield") or 0
+        rec = data.get("recommendation", "")
+        if fcf_y >= 0.05: s += 13; f.append("🟡 ROIC N/A — strong FCF proxy")
+        elif fcf_y >= 0.02: s += 9; f.append("🟡 ROIC N/A — moderate FCF proxy")
+        elif rec in ["strongBuy", "buy"]: s += 6; f.append("🟡 ROIC N/A — buy consensus proxy")
+        else: s += 3; f.append("🟡 ROIC N/A — neutral proxy")
     if data.get("roic_trend_improving"): s += 3; f.append("📈 ROIC improving")
     scores["eva"], flags["eva"] = min(s, 20), f
 
