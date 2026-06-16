@@ -326,11 +326,11 @@ def score_stock(data, sector_cfg):
 
 PILLAR_MINIMUMS_WATCH = {
     "moat": 8, "growth": 5, "valuation": 4,
-    "eva": 3, "technicals": 2, "sam": 3, "catalyst": 2
+    "eva": 3, "technicals": 3, "sam": 4, "catalyst": 3
 }
 PILLAR_MINIMUMS_BUY = {
     "moat": 12, "growth": 8, "valuation": 6,
-    "eva": 5, "technicals": 3, "sam": 4, "catalyst": 3
+    "eva": 5, "technicals": 4, "sam": 5, "catalyst": 4
 }
 
 def passes_minimums(scores, thresholds, total):
@@ -522,8 +522,12 @@ def main():
     try:
         with open("watchlist.json", "r") as f:
             watchlist_data = json.load(f)
-        tickers = [t["symbol"] for t in watchlist_data["tickers"][:MAX_TICKERS]]
-        priority_map = {t["symbol"]: t for t in watchlist_data["tickers"]}
+        # Νέο format: tickers είναι απλή λίστα strings
+        raw = watchlist_data["tickers"]
+        if raw and isinstance(raw[0], dict):
+            tickers = [t["symbol"] for t in raw[:MAX_TICKERS]]
+        else:
+            tickers = raw[:MAX_TICKERS]
     except FileNotFoundError:
         print("❌ watchlist.json not found!")
         return
