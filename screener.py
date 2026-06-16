@@ -326,11 +326,11 @@ def score_stock(data, sector_cfg):
 
 PILLAR_MINIMUMS_WATCH = {
     "moat": 8, "growth": 5, "valuation": 4,
-    "eva": 3, "technicals": 3, "sam": 4, "catalyst": 3
+    "eva": 3, "technicals": 2, "sam": 3, "catalyst": 2
 }
 PILLAR_MINIMUMS_BUY = {
     "moat": 12, "growth": 8, "valuation": 6,
-    "eva": 5, "technicals": 4, "sam": 5, "catalyst": 4
+    "eva": 5, "technicals": 3, "sam": 4, "catalyst": 3
 }
 
 def passes_minimums(scores, thresholds, total):
