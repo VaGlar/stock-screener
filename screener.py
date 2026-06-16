@@ -1,7 +1,6 @@
 """
-Weekly Stock Screener για Βασίλη — v3
+Weekly Stock Screener v3
 7-Pillar scoring framework με sector-aware benchmarks
-Χωρίς Anthropic API — fully quantitative
 """
 
 import yfinance as yf
@@ -74,14 +73,24 @@ def get_sector_config(info, config):
 
 # ── Data ──────────────────────────────────────────────────────────
 
-def get_stock_data(ticker, retries=1,delay=3):
-    try:
+def get_stock_data(ticker, retries=1, delay=3):
+    for attempt in range(retries + 1):
+      try:
         stock = yf.Ticker(ticker)
         info = stock.info
 
         current_price = sf(info.get("currentPrice") or info.get("regularMarketPrice"))
         if not current_price:
             return None
+
+        # Αν λείπουν fundamentals → retry
+        gm = sf(info.get("grossMargins"))
+        om = sf(info.get("operatingMargins"))
+        pe = sf(info.get("trailingPE"))
+        if gm is None and om is None and pe is None and attempt < retries:
+            print(f"  ⚠️ {ticker} missing fundamentals, retry {attempt+1}/{retries}...")
+            time.sleep(delay)
+            continue
 
         hist = stock.history(period="1y")
         if hist.empty:
@@ -179,13 +188,14 @@ def get_stock_data(ticker, retries=1,delay=3):
             "pct_from_high": (current_price - week52_high) / week52_high if week52_high else None,
             "pct_vs_200dma": (current_price - dma200) / dma200,
         }
-    except Exception as e:
+      except Exception as e:
         if attempt < retries:
-                print(f"  ⚠️ {ticker} error, retry {attempt+1}/{retries}: {e}")
-                time.sleep(delay * (attempt + 1))
-                continue
+            print(f"  ⚠️ {ticker} error, retry {attempt+1}/{retries}: {e}")
+            time.sleep(delay)
+            continue
         print(f"  ⚠️ Error {ticker}: {e}")
         return None
+    return None
 
 
 # ── 7-Pillar Scoring ──────────────────────────────────────────────
