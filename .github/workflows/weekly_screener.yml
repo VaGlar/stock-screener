@@ -21,10 +21,16 @@ jobs:
 
       - name: Install dependencies
         run: pip install yfinance pandas requests numpy
-    
 
       - name: Step 1 — Build dynamic watchlist from Finviz
         run: python build_watchlist.py
+
+      - name: Upload watchlist artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: watchlist
+          path: watchlist.json
+          retention-days: 7
 
       - name: Step 2 — Run screener on watchlist
         env:
