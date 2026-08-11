@@ -1,0 +1,31 @@
+date,ticker,name,sector,price,total_score,action
+2026-08-11,FICO,Fair Isaac Corporation,Technology,1040.0,122,STRONG BUY
+2026-08-11,MU,"Micron Technology, Inc.",Technology,861.0,116,STRONG BUY
+2026-08-11,000660.KS,SK hynix,Technology,1425000.0,104,STRONG BUY
+2026-08-11,402340.KS,SKSQUARE,Technology,945000.0,102,STRONG BUY
+2026-08-11,NVDA,NVIDIA Corporation,Technology,221.845,101,STRONG BUY
+2026-08-11,SKHY,SK hynix Inc.,Technology,138.92,100,STRONG BUY
+2026-08-11,016360.KS,SamsungSecu,Financial Services,92700.0,100,STRONG BUY
+2026-08-11,NXPI,NXP Semiconductors N.V.,Technology,237.825,99,BUY
+2026-08-11,SM,SM Energy Company,Energy,31.82,98,BUY
+2026-08-11,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,582.5,97,BUY
+2026-08-11,DHT,"DHT Holdings, Inc.",Energy,18.35,96,BUY
+2026-08-11,INTU,Intuit Inc.,Technology,333.98,96,BUY
+2026-08-11,APP,Applovin Corporation,Communication Services,327.98,93,BUY
+2026-08-11,G24.DE,Scout24 SE                    N,Communication Services,76.35,92,BUY
+2026-08-11,005930.KS,SamsungElec,Technology,239500.0,90,BUY
+2026-08-11,ALL,Allstate Corporation (The),Financial Services,267.13,89,BUY
+2026-08-11,TPL,Texas Pacific Land Corporation,Energy,351.9999,89,BUY
+2026-08-11,KGC,Kinross Gold Corporation,Basic Materials,27.4,88,BUY
+2026-08-11,006800.KS,MIRAE ASSET SEC,Financial Services,35500.0,88,BUY
+2026-08-11,ADI,"Analog Devices, Inc.",Technology,388.0,87,BUY
+2026-08-11,CINF,Cincinnati Financial Corporatio,Financial Services,172.62,87,BUY
+2026-08-11,EOG,"EOG Resources, Inc.",Energy,141.875,87,BUY
+2026-08-11,278470.KS,APR,Consumer Defensive,385500.0,87,BUY
+2026-08-11,039490.KS,KIWOOM,Financial Services,300000.0,87,BUY
+2026-08-11,259960.KS,KRAFTON,Communication Services,244000.0,87,BUY
+2026-08-11,AR,Antero Resources Corporation,Energy,37.07,86,BUY
+2026-08-11,SCHW,Charles Schwab Corporation (The,Financial Services,107.67,86,BUY
+2026-08-11,AAF.L,AIRTEL AFRICA PLC ORD USD0.50,Communication Services,326.6,86,BUY
+2026-08-11,036570.KS,NC,Communication Services,255500.0,86,BUY
+2026-08-11,IAG,Iamgold Corporation,Basic Materials,18.43,85,BUY
