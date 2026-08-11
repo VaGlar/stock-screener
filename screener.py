@@ -13,6 +13,7 @@ import os
 import time
 import numpy as np
 from datetime import datetime
+from collections import Counter
 
 SENDER_EMAIL = "vasilisglaros@gmail.com"
 RECEIVER_EMAIL = "vasilisglaros@gmail.com"
@@ -75,7 +76,7 @@ def get_sector_config(info, config):
 
 # ── Data ──────────────────────────────────────────────────────────
 
-def get_stock_data(ticker, retries=1, delay=3):
+def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
     for attempt in range(retries + 1):
       try:
         stock = yf.Ticker(ticker)
@@ -178,7 +179,7 @@ def get_stock_data(ticker, retries=1, delay=3):
 
         return {
             "ticker": ticker,
-            "name": info.get("shortName", ticker),
+            "name": info.get("shortName") or info.get("longName") or fallback_name or ticker,
             "sector": info.get("sector", "N/A"),
             "industry": info.get("industry", "N/A"),
             "price": current_price,
@@ -458,15 +459,62 @@ def log_recommendations(results_reported):
     print(f"📝 {len(results_reported)} προτάσεις καταγράφηκαν στο {RECOMMENDATIONS_LOG}")
 
 
+def load_recommendation_history():
+    """ticker -> λίστα προηγούμενων γραμμών του ledger (χρονολογική σειρά), για badges στο report"""
+    if not os.path.exists(RECOMMENDATIONS_LOG):
+        return {}
+    history = {}
+    with open(RECOMMENDATIONS_LOG, newline="") as f:
+        for row in csv.DictReader(f):
+            history.setdefault(row["ticker"], []).append(row)
+    return history
+
+
 # ── HTML Report ───────────────────────────────────────────────────
 
-def build_html_report(results, watchlist_meta):
+def ledger_badge(ticker, current_score, current_price, history):
+    past = (history or {}).get(ticker, [])
+    if not past:
+        return '<span style="color:#2563eb">🆕 Νέα πρόταση</span>'
+    last = past[-1]
+    try:
+        last_score = int(last["total_score"])
+        last_price = float(last["price"])
+    except (ValueError, KeyError, TypeError):
+        return f"🔁 {len(past) + 1}η φορά"
+    score_delta = current_score - last_score
+    delta_str = f"+{score_delta}" if score_delta >= 0 else str(score_delta)
+    price_str = f"{(current_price - last_price) / last_price:+.1%}" if (isinstance(current_price, (int, float)) and last_price) else "N/A"
+    color = "#16a34a" if score_delta >= 0 else "#dc2626"
+    return (f'<span style="color:{color}">🔁 {len(past) + 1}η φορά · Δscore {delta_str} '
+            f'({last_score}→{current_score}) · {price_str} από τελευταία πρόταση ({last["date"]})</span>')
+
+
+def ledger_badge_compact(ticker, current_score, current_price, history):
+    past = (history or {}).get(ticker, [])
+    if not past:
+        return '<span style="color:#2563eb">🆕 new</span>'
+    last = past[-1]
+    try:
+        score_delta = current_score - int(last["total_score"])
+    except (ValueError, KeyError, TypeError):
+        return f"🔁 x{len(past) + 1}"
+    color = "#16a34a" if score_delta >= 0 else "#dc2626"
+    sign = "+" if score_delta >= 0 else ""
+    return f'<span style="color:{color}">🔁 x{len(past) + 1} Δ{sign}{score_delta}</span>'
+
+
+def build_html_report(results, watchlist_meta, history=None):
     date_str = datetime.now().strftime("%d/%m/%Y")
     total_scanned = watchlist_meta.get("total_tickers", "N/A")
 
     results_sorted = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
     top5 = results_sorted[:5]
     rest = results_sorted[5:]
+
+    avg_score = (sum(r["total_score"] for r in results_sorted) / len(results_sorted)) if results_sorted else 0
+    sector_counts = Counter(r["data"].get("sector", "N/A") for r in results_sorted)
+    top_sector, top_sector_n = sector_counts.most_common(1)[0] if sector_counts else ("N/A", 0)
 
     def pillar_bar(label, score, max_score):
         score = score or 0
@@ -494,12 +542,13 @@ def build_html_report(results, watchlist_meta):
         rsi_val = d.get('rsi') or 0
 
         cards_html += f"""
-        <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:14px;">
+        <div style="background:white;border:0.5px solid #e5e7eb;border-left:4px solid {lc};border-radius:12px;padding:18px;margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
                 <div>
                     <span style="font-size:20px;font-weight:600">{d['ticker']}</span>
                     <span style="font-size:13px;color:#6b7280;margin-left:8px">{d['name']}</span>
                     <div style="font-size:11px;color:#9ca3af;margin-top:2px">{d['industry']} · {d['sector']}</div>
+                    <div style="font-size:11px;margin-top:3px">{ledger_badge(d['ticker'], total, d.get('price'), history)}</div>
                 </div>
                 <div style="text-align:right">
                     <span style="background:{lb};color:{lc};font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">{label}</span>
@@ -540,7 +589,7 @@ def build_html_report(results, watchlist_meta):
         </div>"""
 
     rest_rows = ""
-    for r in rest:
+    for i, r in enumerate(rest):
         d = r["data"]
         total = r["total_score"]
         thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
@@ -550,9 +599,11 @@ def build_html_report(results, watchlist_meta):
         upside = f"+{((target-price)/price):.0%}" if (target and price and isinstance(target, (int,float)) and isinstance(price, (int,float))) else "N/A"
         pct_high = d.get('pct_from_high') or 0
         rsi_val = d.get('rsi') or 0
-        rest_rows += f"""<tr>
+        row_bg = "background:#f9fafb;" if i % 2 == 1 else ""
+        rest_rows += f"""<tr style="{row_bg}">
             <td style="padding:7px 8px;font-weight:500">{d['ticker']}<br>
-                <small style="color:#9ca3af;font-weight:400">{d['industry'][:22]}</small></td>
+                <small style="color:#9ca3af;font-weight:400">{d['industry'][:22]}</small><br>
+                <small style="font-size:10px">{ledger_badge_compact(d['ticker'], total, d.get('price'), history)}</small></td>
             <td style="padding:7px 8px">${price:.2f}</td>
             <td style="padding:7px 8px;color:#dc2626">{pct_high:.0%}</td>
             <td style="padding:7px 8px;color:#16a34a">{upside}</td>
@@ -591,6 +642,10 @@ def build_html_report(results, watchlist_meta):
             {date_str} · {total_scanned} stocks scanned · Top {MAX_REPORT}
         </div>
     </div>
+    <div style="display:flex;gap:16px;margin-bottom:20px;font-size:12px;color:#6b7280;">
+        <span>📊 Μ.Ο. score: {avg_score:.0f}/150</span>
+        <span>🏆 Κορυφαίος τομέας: {top_sector} ({top_sector_n}/{len(results_sorted)})</span>
+    </div>
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
     {rest_html}
@@ -628,6 +683,7 @@ def main():
             tickers = [t["symbol"] for t in raw[:MAX_TICKERS]]
         else:
             tickers = raw[:MAX_TICKERS]
+        ticker_names = watchlist_data.get("names", {})
     except FileNotFoundError:
         print("❌ watchlist.json not found!")
         return
@@ -637,7 +693,7 @@ def main():
 
     for i, ticker in enumerate(tickers, 1):
         print(f"  [{i}/{len(tickers)}] {ticker}")
-        data = get_stock_data(ticker)
+        data = get_stock_data(ticker, fallback_name=ticker_names.get(ticker))
         if not data:
             continue
         sector_cfg, sector_key = get_sector_config(data, config)
@@ -660,8 +716,9 @@ def main():
 
     print(f"\n✅ {len(results)} stocks passed filters")
     results_reported = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
+    history = load_recommendation_history()  # πριν το log_recommendations, αλλιώς θα δει τη σημερινή γραμμή ως "παρελθόν"
     log_recommendations(results_reported)
-    html = build_html_report(results, watchlist_data)
+    html = build_html_report(results, watchlist_data, history)
     send_email(html)
 
 

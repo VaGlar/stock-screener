@@ -6,10 +6,10 @@
 
 Μαζεύει tickers από 3 πηγές, χωρίς κανένα quality pre-filter — όλα προχωράνε στο screener:
 - **S&P 500** (GitHub CSV)
-- **Wikipedia indices**: FTSE 100 🇬🇧, DAX 🇩🇪, CAC 40 🇫🇷, Euro Stoxx 50 🇪🇺, BSE Sensex 🇮🇳
+- **Wikipedia indices**: FTSE 100 🇬🇧, DAX 🇩🇪, CAC 40 🇫🇷, Euro Stoxx 50 🇪🇺, BSE Sensex 🇮🇳, KOSPI 200 🇰🇷
 - **Yahoo Finance screens**: undervalued_growth_stocks, growth_technology_stocks, undervalued_large_caps, aggressive_small_caps, day_gainers, most_actives
 
-Το αποτέλεσμα (μέχρι `MAX_TICKERS` = 2000) γράφεται στο `watchlist.json` και περνάει ολόκληρο στο screener.py.
+Το αποτέλεσμα (μέχρι `MAX_TICKERS` = 2000) γράφεται στο `watchlist.json` και περνάει ολόκληρο στο screener.py. Μαζί με τα tickers, κρατάει και ένα `names` mapping (ticker → όνομα εταιρείας) από τις πηγές που το δίνουν (S&P 500 CSV, Wikipedia tables) — το screener.py το χρησιμοποιεί ως fallback όταν το yfinance δεν έχει `shortName`/`longName` για το ticker (συχνό σε αγορές όπως η Κορέα, όπου αλλιώς θα εμφανιζόταν μόνο ο κωδικός π.χ. `000660.KS` αντί για "SK Hynix").
 
 ---
 
