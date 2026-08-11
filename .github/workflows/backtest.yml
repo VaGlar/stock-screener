@@ -1,0 +1,33 @@
+name: Backtest Scoring Model
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-backtest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install yfinance pandas requests numpy lxml html5lib
+
+      - name: Step 1 — Build watchlist (backtest.py χρειάζεται watchlist.json)
+        run: python build_watchlist.py
+
+      - name: Step 2 — Run backtest
+        run: python backtest.py
+
+      - name: Upload backtest results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-results
+          path: backtest_results.csv
+          retention-days: 30
