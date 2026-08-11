@@ -57,8 +57,47 @@ def compute_report_rows(rows, current_prices):
     return report_rows
 
 
+def _breakdown_table(groups, order):
+    """groups: {label: [rows]}, order: ποια σειρά/ποια labels να εμφανιστούν αν υπάρχουν"""
+    rows_html = ""
+    for label in order:
+        sub = groups.get(label)
+        if not sub:
+            continue
+        avg = sum(r["return_pct"] for r in sub) / len(sub)
+        hr = sum(1 for r in sub if r["return_pct"] > 0) / len(sub)
+        color = "#16a34a" if avg >= 0 else "#dc2626"
+        rows_html += f"""<tr>
+            <td style="padding:6px 8px">{label}</td>
+            <td style="padding:6px 8px">{len(sub)}</td>
+            <td style="padding:6px 8px;color:{color}">{avg:+.1%}</td>
+            <td style="padding:6px 8px">{hr:.0%}</td>
+        </tr>"""
+    return f"""<table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
+                <th style="padding:6px 8px;text-align:left"></th>
+                <th style="padding:6px 8px;text-align:left">#</th>
+                <th style="padding:6px 8px;text-align:left">Μέση απόδοση</th>
+                <th style="padding:6px 8px;text-align:left">Hit rate</th>
+            </tr>
+            {rows_html}
+        </table>"""
+
+
+def _stock_row(r):
+    color = "#16a34a" if r["return_pct"] >= 0 else "#dc2626"
+    return f"""<tr>
+        <td style="padding:6px 8px;font-weight:500">{r['ticker']}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{r['action']}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{r['days_held']}d</td>
+        <td style="padding:6px 8px;color:{color};font-weight:600">{r['return_pct']:+.1%}</td>
+    </tr>"""
+
+
 def render_html_summary(report_rows):
-    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report."""
+    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report.
+    # = πλήθος καταγραφών (ledger rows) στην ομάδα, όχι μοναδικά tickers — μια μετοχή
+    που προτάθηκε πολλές φορές μετράει μία φορά ανά πρόταση."""
     valid = [r for r in report_rows if r.get("return_pct") is not None]
     if not valid:
         return ""
@@ -70,37 +109,38 @@ def render_html_summary(report_rows):
     by_action = {}
     for r in valid:
         by_action.setdefault(r["action"], []).append(r)
+    action_table = _breakdown_table(by_action, ["STRONG BUY", "BUY", "WATCH", "PASS"])
 
-    rows_html = ""
-    for action in ["STRONG BUY", "BUY", "WATCH", "PASS"]:
-        sub = by_action.get(action)
-        if not sub:
-            continue
-        avg = sum(r["return_pct"] for r in sub) / len(sub)
-        hr = sum(1 for r in sub if r["return_pct"] > 0) / len(sub)
-        color = "#16a34a" if avg >= 0 else "#dc2626"
-        rows_html += f"""<tr>
-            <td style="padding:6px 8px">{action}</td>
-            <td style="padding:6px 8px">{len(sub)}</td>
-            <td style="padding:6px 8px;color:{color}">{avg:+.1%}</td>
-            <td style="padding:6px 8px">{hr:.0%}</td>
-        </tr>"""
+    by_period = {}
+    for r in valid:
+        by_period.setdefault(bucket_days(r["days_held"]), []).append(r)
+    period_table = _breakdown_table(by_period, ["<30d", "30-90d", "90-180d", "180d+"])
+
+    winners = sorted(valid, key=lambda r: r["return_pct"], reverse=True)[:5]
+    losers = sorted(valid, key=lambda r: r["return_pct"])[:5]
+    highlights = f"""
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+            <div>
+                <div style="font-size:12px;color:#16a34a;font-weight:600;margin-bottom:6px">🏆 Top 5 winners</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row(r) for r in winners)}</table>
+            </div>
+            <div>
+                <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:6px">📉 Top 5 laggards</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row(r) for r in losers)}</table>
+            </div>
+        </div>"""
 
     return f"""
     <div style="margin-top:28px">
         <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">📈 Πραγματική απόδοση προτάσεων ({len(valid)} tracked)</h2>
         <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;">
-            <div style="font-size:13px;color:#6b7280">Μέση απόδοση: <strong style="color:{avg_color}">{avg_ret:+.1%}</strong> · Hit rate: <strong>{hit_rate:.0%}</strong></div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:14px">Μέση απόδοση: <strong style="color:{avg_color}">{avg_ret:+.1%}</strong> · Hit rate: <strong>{hit_rate:.0%}</strong></div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Ανά action label</div>
+            {action_table}
+            <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">Ανά holding period</div>
+            {period_table}
+            {highlights}
         </div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
-                <th style="padding:6px 8px;text-align:left">Action</th>
-                <th style="padding:6px 8px;text-align:left">n</th>
-                <th style="padding:6px 8px;text-align:left">Μέση απόδοση</th>
-                <th style="padding:6px 8px;text-align:left">Hit rate</th>
-            </tr>
-            {rows_html}
-        </table>
     </div>"""
 
 
