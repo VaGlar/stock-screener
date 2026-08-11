@@ -39,6 +39,71 @@ def bucket_days(days):
     return "180d+"
 
 
+def compute_report_rows(rows, current_prices):
+    today = datetime.now().date()
+    report_rows = []
+    for r in rows:
+        entry_price = float(r["price"]) if r.get("price") else None
+        cur_price = current_prices.get(r["ticker"])
+        rec_date = datetime.strptime(r["date"], "%Y-%m-%d").date()
+        days_held = (today - rec_date).days
+        ret = ((cur_price - entry_price) / entry_price) if (entry_price and cur_price) else None
+        report_rows.append({
+            **r,
+            "current_price": cur_price,
+            "days_held": days_held,
+            "return_pct": ret,
+        })
+    return report_rows
+
+
+def render_html_summary(report_rows):
+    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report."""
+    valid = [r for r in report_rows if r.get("return_pct") is not None]
+    if not valid:
+        return ""
+
+    avg_ret = sum(r["return_pct"] for r in valid) / len(valid)
+    hit_rate = sum(1 for r in valid if r["return_pct"] > 0) / len(valid)
+    avg_color = "#16a34a" if avg_ret >= 0 else "#dc2626"
+
+    by_action = {}
+    for r in valid:
+        by_action.setdefault(r["action"], []).append(r)
+
+    rows_html = ""
+    for action in ["STRONG BUY", "BUY", "WATCH", "PASS"]:
+        sub = by_action.get(action)
+        if not sub:
+            continue
+        avg = sum(r["return_pct"] for r in sub) / len(sub)
+        hr = sum(1 for r in sub if r["return_pct"] > 0) / len(sub)
+        color = "#16a34a" if avg >= 0 else "#dc2626"
+        rows_html += f"""<tr>
+            <td style="padding:6px 8px">{action}</td>
+            <td style="padding:6px 8px">{len(sub)}</td>
+            <td style="padding:6px 8px;color:{color}">{avg:+.1%}</td>
+            <td style="padding:6px 8px">{hr:.0%}</td>
+        </tr>"""
+
+    return f"""
+    <div style="margin-top:28px">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">📈 Πραγματική απόδοση προτάσεων ({len(valid)} tracked)</h2>
+        <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;">
+            <div style="font-size:13px;color:#6b7280">Μέση απόδοση: <strong style="color:{avg_color}">{avg_ret:+.1%}</strong> · Hit rate: <strong>{hit_rate:.0%}</strong></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
+                <th style="padding:6px 8px;text-align:left">Action</th>
+                <th style="padding:6px 8px;text-align:left">n</th>
+                <th style="padding:6px 8px;text-align:left">Μέση απόδοση</th>
+                <th style="padding:6px 8px;text-align:left">Hit rate</th>
+            </tr>
+            {rows_html}
+        </table>
+    </div>"""
+
+
 def summarize(rows):
     valid = [r for r in rows if r["return_pct"] is not None]
     if not valid:
@@ -81,20 +146,7 @@ def main():
     print(f"🔍 Υπολογισμός απόδοσης για {len(rows)} προτάσεις, {len(tickers)} unique tickers...")
     current_prices = get_current_prices(tickers)
 
-    today = datetime.now().date()
-    report_rows = []
-    for r in rows:
-        entry_price = float(r["price"]) if r.get("price") else None
-        cur_price = current_prices.get(r["ticker"])
-        rec_date = datetime.strptime(r["date"], "%Y-%m-%d").date()
-        days_held = (today - rec_date).days
-        ret = ((cur_price - entry_price) / entry_price) if (entry_price and cur_price) else None
-        report_rows.append({
-            **r,
-            "current_price": cur_price,
-            "days_held": days_held,
-            "return_pct": ret,
-        })
+    report_rows = compute_report_rows(rows, current_prices)
 
     with open(REPORT_FILE, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(report_rows[0].keys()))
