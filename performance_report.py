@@ -122,9 +122,11 @@ def render_html_summary(report_rows):
         by_period.setdefault(bucket_days(r["days_held"]), []).append(r)
     period_table = _breakdown_table(by_period, ["<30d", "30-90d", "90-180d", "180d+"])
 
-    winners = sorted(valid, key=lambda r: r["return_pct"], reverse=True)[:5]
-    losers = sorted(valid, key=lambda r: r["return_pct"])[:5]
-    highlights = f"""
+    # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
+    actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
+    winners = sorted(actionable, key=lambda r: r["return_pct"], reverse=True)[:5]
+    losers = sorted(actionable, key=lambda r: r["return_pct"])[:5]
+    highlights = "" if not actionable else f"""
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
             <div>
                 <div style="font-size:12px;color:#16a34a;font-weight:600;margin-bottom:6px">🏆 Top 5 winners</div>
