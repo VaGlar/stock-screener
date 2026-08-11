@@ -55,7 +55,7 @@ def compute_technicals(closes, i):
     }
 
 
-def fundamentals_from_info(info):
+def fundamentals_from_info(info, insider_net_pct=None):
     fcf = sf(info.get("freeCashflow"))
     mc = sf(info.get("marketCap"))
     return {
@@ -78,7 +78,29 @@ def fundamentals_from_info(info):
         "industry": info.get("industry", "N/A"),
         "sector": info.get("sector", "N/A"),
         "target_price": sf(info.get("targetMeanPrice")),
+        "insider_net_pct": insider_net_pct,  # snapshot τρέχουσας στιγμής, ίδιος περιορισμός με τα υπόλοιπα fundamentals
     }
+
+
+def get_insider_net_pct(stock):
+    try:
+        insider_df = stock.insider_purchases
+        if insider_df is None or insider_df.empty:
+            return None
+        label_col = insider_df.columns[0]
+        for _, row in insider_df.iterrows():
+            label = str(row[label_col])
+            if "% Net Shares Purchased" in label:
+                val = row.get("Shares") if "Shares" in insider_df.columns else row.iloc[-1]
+                if isinstance(val, str):
+                    val = val.strip().rstrip("%")
+                pct = sf(val)
+                if pct is not None and abs(pct) > 1:
+                    pct /= 100
+                return pct
+    except Exception:
+        return None
+    return None
 
 
 def run_backtest():
@@ -97,7 +119,7 @@ def run_backtest():
                 continue
             closes = hist["Close"]
 
-            fundamentals = fundamentals_from_info(info)
+            fundamentals = fundamentals_from_info(info, get_insider_net_pct(stock))
             sector_cfg, sector_key = get_sector_config(fundamentals, config)
             thresholds = sector_cfg.get("thresholds", {"pass": 65, "watch": 80, "buy": 100})
 

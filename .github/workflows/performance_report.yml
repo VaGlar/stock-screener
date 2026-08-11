@@ -1,13 +1,16 @@
-name: Backtest Scoring Model
+name: Performance Report
 
 on:
+  schedule:
+    # 1η κάθε μήνα, 07:00 ώρα Ελλάδας (04:00 UTC)
+    - cron: "0 4 1 * *"
   workflow_dispatch:
 
 env:
   PYTHONUNBUFFERED: "1"  # χωρίς αυτό, το stdout είναι block-buffered και τα logs εμφανίζονται εκτός σειράς
 
 jobs:
-  run-backtest:
+  run-report:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,17 +23,14 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install yfinance pandas requests numpy lxml html5lib
+        run: pip install yfinance
 
-      - name: Step 1 — Build watchlist (backtest.py χρειάζεται watchlist.json)
-        run: python build_watchlist.py
+      - name: Run performance report
+        run: python performance_report.py
 
-      - name: Step 2 — Run backtest
-        run: python backtest.py
-
-      - name: Upload backtest results
+      - name: Upload performance report
         uses: actions/upload-artifact@v4
         with:
-          name: backtest-results
-          path: backtest_results.csv
-          retention-days: 30
+          name: performance-report
+          path: performance_report.csv
+          retention-days: 90

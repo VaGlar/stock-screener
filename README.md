@@ -13,7 +13,7 @@
 
 ---
 
-**Φίλτρο — screener.py (Total Score ≥ 40/145)**
+**Φίλτρο — screener.py (Total Score ≥ 40/150)**
 
 Μετά το 7-pillar scoring, αν το total < 40 → **δεν εμφανίζεται** στο report.
 
@@ -52,11 +52,12 @@
 - Industry type → 0-5
 - Revenue growth proxy → 0-5
 
-**7. Catalyst /15** *(quantitative proxy)*
+**7. Catalyst /20** *(quantitative proxy)*
 - RSI oversold → 0-5
 - Analyst upside → 0-5
 - Αριθμός αναλυτών → 0-3
 - Deep value bonus → +2
+- Insider buying (καθαρό % αγορών vs πωλήσεων, τελευταίοι 6 μήνες) → +5 αν ≥2% net buying, +3 αν θετικό
 
 ---
 

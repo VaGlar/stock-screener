@@ -5,6 +5,7 @@ Weekly Stock Screener — v3
 
 import yfinance as yf
 import json
+import csv
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -18,6 +19,7 @@ RECEIVER_EMAIL = "vasilisglaros@gmail.com"
 EMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 MAX_TICKERS = 2000
 MAX_REPORT = 30
+RECOMMENDATIONS_LOG = "recommendations_log.csv"
 
 
 # ── Safe float helper ─────────────────────────────────────────────
@@ -145,6 +147,25 @@ def get_stock_data(ticker, retries=1, delay=3):
             roic_current = None
             roic_trend_improving = None
 
+        # Insider buying — καθαρό % μετοχών που αγοράστηκαν (θετικό) ή πουλήθηκαν (αρνητικό) τους τελευταίους 6 μήνες
+        try:
+            insider_df = stock.insider_purchases
+            insider_net_pct = None
+            if insider_df is not None and not insider_df.empty:
+                label_col = insider_df.columns[0]
+                for _, row in insider_df.iterrows():
+                    label = str(row[label_col])
+                    if "% Net Shares Purchased" in label:
+                        val = row.get("Shares") if "Shares" in insider_df.columns else row.iloc[-1]
+                        if isinstance(val, str):
+                            val = val.strip().rstrip("%")
+                        insider_net_pct = sf(val)
+                        if insider_net_pct is not None and abs(insider_net_pct) > 1:
+                            insider_net_pct /= 100  # ήταν ήδη σε ποσοστιαίες μονάδες (π.χ. "12.3") αντί για κλάσμα
+                        break
+        except Exception:
+            insider_net_pct = None
+
         fcf = sf(info.get("freeCashflow"))
         market_cap = sf(info.get("marketCap"))
         fcf_yield = (fcf / market_cap) if (fcf and market_cap and market_cap > 0) else None
@@ -187,6 +208,7 @@ def get_stock_data(ticker, retries=1, delay=3):
             "rsi": rsi,
             "pct_from_high": (current_price - week52_high) / week52_high if week52_high else None,
             "pct_vs_200dma": (current_price - dma200) / dma200,
+            "insider_net_pct": insider_net_pct,
         }
       except Exception as e:
         if attempt < retries:
@@ -350,7 +372,7 @@ def score_stock(data, sector_cfg):
         elif rg >= 0.10: s += 3
     scores["sam"], flags["sam"] = min(s, 15), f
 
-    # 7. CATALYST /15
+    # 7. CATALYST /20
     s, f = 0, []
     rsi = data.get("rsi") or 50
     pct_high = data.get("pct_from_high") or 0
@@ -370,7 +392,12 @@ def score_stock(data, sector_cfg):
         if num_analysts >= 15: s += 3; f.append(f"🎯 {num_analysts} analysts covering")
         elif num_analysts >= 8: s += 2
     if isinstance(pct_high, (int, float)) and pct_high <= -0.40: s += 2; f.append("🎯 Deep value — mean reversion")
-    scores["catalyst"], flags["catalyst"] = min(s, 15), f
+    insider = data.get("insider_net_pct")
+    if insider is not None and isinstance(insider, (int, float)):
+        if insider >= 0.02: s += 5; f.append(f"💼 Insider buying +{insider:.1%} (6m)")
+        elif insider > 0: s += 3; f.append(f"💼 Insider net buying +{insider:.1%} (6m)")
+        elif insider < -0.05: f.append(f"⚠️ Insider selling {insider:.1%} (6m)")
+    scores["catalyst"], flags["catalyst"] = min(s, 20), f
 
     total = sum(scores.values())
     return scores, flags, total
@@ -410,6 +437,25 @@ def format_market_cap(mc):
     if mc >= 1e12: return f"${mc/1e12:.1f}T"
     if mc >= 1e9: return f"${mc/1e9:.1f}B"
     return f"${mc/1e6:.0f}M"
+
+
+# ── Recommendations Log ──────────────────────────────────────────────
+# Καταγράφει ό,τι πραγματικά στέλνεται στο email, ώστε αργότερα να μπορούμε
+# να μετρήσουμε την πραγματική απόδοση των προτάσεων (βλ. performance_report.py)
+
+def log_recommendations(results_reported):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    file_exists = os.path.exists(RECOMMENDATIONS_LOG)
+    with open(RECOMMENDATIONS_LOG, "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["date", "ticker", "name", "sector", "price", "total_score", "action"])
+        for r in results_reported:
+            d = r["data"]
+            thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
+            action = get_action(r["total_score"], thresholds)[0]
+            writer.writerow([date_str, d["ticker"], d["name"], d["sector"], d["price"], r["total_score"], action])
+    print(f"📝 {len(results_reported)} προτάσεις καταγράφηκαν στο {RECOMMENDATIONS_LOG}")
 
 
 # ── HTML Report ───────────────────────────────────────────────────
@@ -457,7 +503,7 @@ def build_html_report(results, watchlist_meta):
                 </div>
                 <div style="text-align:right">
                     <span style="background:{lb};color:{lc};font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">{label}</span>
-                    <div style="font-size:22px;font-weight:700;margin-top:4px">{total}<span style="font-size:12px;color:#9ca3af;font-weight:400">/145</span></div>
+                    <div style="font-size:22px;font-weight:700;margin-top:4px">{total}<span style="font-size:12px;color:#9ca3af;font-weight:400">/150</span></div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px;">
@@ -489,7 +535,7 @@ def build_html_report(results, watchlist_meta):
                 {pillar_bar("EVA", r['scores'].get('eva'), 20)}
                 {pillar_bar("Technicals", r['scores'].get('technicals'), 15)}
                 {pillar_bar("SAM", r['scores'].get('sam'), 15)}
-                {pillar_bar("Catalyst", r['scores'].get('catalyst'), 15)}
+                {pillar_bar("Catalyst", r['scores'].get('catalyst'), 20)}
             </div>
         </div>"""
 
@@ -512,7 +558,7 @@ def build_html_report(results, watchlist_meta):
             <td style="padding:7px 8px;color:#16a34a">{upside}</td>
             <td style="padding:7px 8px">{rsi_val:.0f}</td>
             <td style="padding:7px 8px">{format_market_cap(d['market_cap'])}</td>
-            <td style="padding:7px 8px;font-weight:600">{total}/145</td>
+            <td style="padding:7px 8px;font-weight:600">{total}/150</td>
             <td style="padding:7px 8px">
                 <span style="background:{lb};color:{lc};font-size:11px;padding:2px 8px;border-radius:5px">{label}</span>
             </td>
@@ -613,6 +659,8 @@ def main():
         time.sleep(0.5)
 
     print(f"\n✅ {len(results)} stocks passed filters")
+    results_reported = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
+    log_recommendations(results_reported)
     html = build_html_report(results, watchlist_data)
     send_email(html)
 
