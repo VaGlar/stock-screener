@@ -2,20 +2,18 @@
 
 ---
 
-**Φίλτρο 1 — build_watchlist.py (Quick Score ≥ 2)**
+**Βήμα 1 — build_watchlist.py (χτίζει το universe, χωρίς scoring)**
 
-Πριν καν φτάσει στο screener, κάθε μετοχή παίρνει quick score:
-- Έπεσε >25% από 52w high → +2
-- Analyst upside >20% → +2
-- Buy/Strong Buy recommendation → +1
-- Revenue growth >15% → +1
-- P/E < 25 → +1
+Μαζεύει tickers από 3 πηγές, χωρίς κανένα quality pre-filter — όλα προχωράνε στο screener:
+- **S&P 500** (GitHub CSV)
+- **Wikipedia indices**: FTSE 100 🇬🇧, DAX 🇩🇪, CAC 40 🇫🇷, Euro Stoxx 50 🇪🇺, BSE Sensex 🇮🇳
+- **Yahoo Finance screens**: undervalued_growth_stocks, growth_technology_stocks, undervalued_large_caps, aggressive_small_caps, day_gainers, most_actives
 
-Αν score < 2 → **αποκλείεται εντελώς** από το watchlist.json
+Το αποτέλεσμα (μέχρι `MAX_TICKERS` = 2000) γράφεται στο `watchlist.json` και περνάει ολόκληρο στο screener.py.
 
 ---
 
-**Φίλτρο 2 — screener.py (Total Score ≥ 40/145)**
+**Φίλτρο — screener.py (Total Score ≥ 40/145)**
 
 Μετά το 7-pillar scoring, αν το total < 40 → **δεν εμφανίζεται** στο report.
 
