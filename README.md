@@ -44,10 +44,10 @@
 - ROIC-WACC spread → 0-7
 - ROIC trend improving → +3
 
-**5. Technicals /15**
-- % κάτω από 52w high → 0-6
-- vs 200DMA → 0-4
-- RSI ≤ 30 → +5, RSI ≤ 45 → +3
+**5. Technicals /15** *(bidirectional — αμείβει είτε dip-reversal είτε momentum setup)*
+- % από 52w high: deep value dip → 0-6, ή κοντά/σε new high (momentum) → +4
+- vs 200DMA: κοντά στο DMA → +4, σταθερό uptrend πάνω από DMA → +3, κάτω από DMA → +1
+- RSI ≤ 30 (oversold) → +5, RSI ≤ 45 → +3, RSI 45-70 (bullish momentum) → +3, RSI ≥ 70 (overbought) → 0
 
 **6. SAM /15** *(quantitative proxy)*
 - Market cap size → 0-5 (μικρότερο = περισσότερο headroom)
@@ -69,3 +69,7 @@
 - **<65** → PASS
 
 Τα thresholds αλλάζουν ανά sector — π.χ. Small Cap Growth έχει χαμηλότερα (90/70/55) γιατί είναι δύσκολο να πάρεις υψηλό score με ζημιογόνες εταιρείες.
+
+---
+
+**Pillar minimums (gate):** Μόνο τα core-quality pillars (Moat, Growth, EVA) πρέπει να περάσουν ένα ελάχιστο για να μην αποκλειστεί μια μετοχή. Valuation/Technicals/SAM/Catalyst επηρεάζουν το total score αλλά δεν αποκλείουν πλέον μόνα τους — έτσι μια ακριβή, momentum-quality μετοχή (π.χ. κοντά σε 52w high) δεν αποκλείεται απλώς επειδή δεν είναι "φθηνή" ή δεν έχει πέσει.

@@ -314,25 +314,25 @@ def score_stock(data, sector_cfg):
     if data.get("roic_trend_improving"): s += 3; f.append("📈 ROIC improving")
     scores["eva"], flags["eva"] = min(s, 20), f
 
-    # 5. TECHNICALS /15
+    # 5. TECHNICALS /15 — bidirectional: αμείβει είτε deep-value reversal setup είτε confirmed uptrend/momentum
     tech_cfg = sector_cfg.get("technicals", {})
     s, f = 0, []
     pct_high = data.get("pct_from_high")
     if pct_high and isinstance(pct_high, (int, float)):
         if pct_high <= tech_cfg.get("from_52w_high_deep_value", -0.50): s += 6; f.append(f"📉 -{abs(pct_high):.0%} (deep value)")
         elif pct_high <= tech_cfg.get("from_52w_high_opportunity", -0.30): s += 4; f.append(f"📉 -{abs(pct_high):.0%} από high")
-        elif pct_high >= -0.05: s += 1; f.append(f"📈 Κοντά στο high")
+        elif pct_high >= -0.05: s += 4; f.append(f"🚀 Κοντά/σε new high (momentum)")
     pct_dma = data.get("pct_vs_200dma")
     if pct_dma is not None and isinstance(pct_dma, (int, float)):
         if -0.05 <= pct_dma <= 0.10: s += 4; f.append(f"✅ Κοντά στο 200DMA ({pct_dma:+.1%})")
-        elif pct_dma < -0.05: s += 2; f.append(f"⚠️ Κάτω από 200DMA ({pct_dma:+.1%})")
-        else: s += 1; f.append(f"📈 Πάνω από 200DMA ({pct_dma:+.1%})")
+        elif pct_dma > 0.10: s += 3; f.append(f"📈 Σταθερό uptrend πάνω από 200DMA ({pct_dma:+.1%})")
+        else: s += 1; f.append(f"⚠️ Κάτω από 200DMA ({pct_dma:+.1%})")
     rsi = data.get("rsi")
     if rsi and isinstance(rsi, (int, float)):
         if rsi <= 30: s += 5; f.append(f"🟢 RSI {rsi:.0f} (oversold)")
         elif rsi <= 45: s += 3; f.append(f"🟡 RSI {rsi:.0f}")
-        elif rsi >= 70: f.append(f"🔴 RSI {rsi:.0f} (overbought)")
-        else: s += 1; f.append(f"RSI {rsi:.0f}")
+        elif rsi < 70: s += 3; f.append(f"💪 RSI {rsi:.0f} (bullish momentum)")
+        else: f.append(f"🔴 RSI {rsi:.0f} (overbought)")
     scores["technicals"], flags["technicals"] = min(s, 15), f
 
     # 6. SAM /15
@@ -377,14 +377,14 @@ def score_stock(data, sector_cfg):
 
 
 # ── Minimums ──────────────────────────────────────────────────────
-
+# Μόνο τα core-quality pillars (moat/growth/eva) είναι hard gate. Valuation/technicals/sam/catalyst
+# επηρεάζουν το total score αλλά δεν αποκλείουν πλέον μόνα τους — αλλιώς μια ακριβή, momentum
+# quality-μετοχή (π.χ. κοντά σε 52w high) αποκλειόταν ανεξάρτητα από το πόσο υψηλό ήταν το total score.
 PILLAR_MINIMUMS_WATCH = {
-    "moat": 8, "growth": 5, "valuation": 4,
-    "eva": 3, "technicals": 3, "sam": 4, "catalyst": 3
+    "moat": 8, "growth": 5, "eva": 3
 }
 PILLAR_MINIMUMS_BUY = {
-    "moat": 12, "growth": 8, "valuation": 6,
-    "eva": 5, "technicals": 4, "sam": 5, "catalyst": 4
+    "moat": 12, "growth": 8, "eva": 5
 }
 
 def passes_minimums(scores, thresholds, total):
