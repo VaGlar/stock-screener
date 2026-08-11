@@ -26,6 +26,8 @@ jobs:
         run: pip install yfinance
 
       - name: Run performance report
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python performance_report.py
 
       - name: Upload performance report
