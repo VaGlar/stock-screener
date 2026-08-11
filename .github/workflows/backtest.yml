@@ -3,6 +3,9 @@ name: Backtest Scoring Model
 on:
   workflow_dispatch:
 
+env:
+  PYTHONUNBUFFERED: "1"  # χωρίς αυτό, το stdout είναι block-buffered και τα logs εμφανίζονται εκτός σειράς
+
 jobs:
   run-backtest:
     runs-on: ubuntu-latest
