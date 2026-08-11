@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+backtest_results.csv

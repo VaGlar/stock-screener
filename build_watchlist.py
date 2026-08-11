@@ -83,6 +83,13 @@ WIKI_INDICES = {
         "table_idx": 2,
         "has_suffix": True,  # Tickers ήδη έχουν .BO
     },
+    "KOSPI 200 🇰🇷": {
+        "url": "https://en.wikipedia.org/wiki/KOSPI_200",
+        "col": "Symbol",
+        "suffix": ".KS",
+        "table_idx": 2,
+        "has_suffix": False,  # Tickers είναι 6-ψήφιοι αριθμητικοί κωδικοί (π.χ. 005930) — θα προσθέσουμε .KS
+    },
 }
 
 
@@ -128,14 +135,15 @@ def get_wikipedia_tickers():
                     t = t.strip().split()[0]  # Πρώτη λέξη μόνο
 
                     if cfg.get("has_suffix"):
-                        # Ticker ήδη έχει suffix (π.χ. ADS.DE, ADANIPORTS.BO)
-                        # Κράτα ως έχει αν έχει valid format
-                        if re.match(r'^[A-Z][A-Z0-9]{1,9}(\.[A-Z]{1,3})?$', t):
+                        # Ticker ήδη έχει suffix (π.χ. ADS.DE, ADANIPORTS.BO, 7203.T)
+                        # Κράτα ως έχει αν έχει valid format — επιτρέπει και αριθμητικούς κωδικούς (Ιαπωνία, Ταϊβάν, Κορέα)
+                        if re.match(r'^[A-Z0-9]{1,10}(\.[A-Z]{1,3})?$', t):
                             clean.append(t)
                     else:
                         # Ticker χωρίς suffix — πρόσθεσε το suffix
+                        # Επιτρέπει και αριθμητικούς κωδικούς (π.χ. 7203 Toyota, 2330 TSMC, 005930 Samsung)
                         t_clean = re.sub(r'[^A-Z0-9]', '', t.upper())
-                        if re.match(r'^[A-Z]{2,6}$', t_clean):
+                        if re.match(r'^[A-Z0-9]{2,6}$', t_clean):
                             clean.append(t_clean + cfg["suffix"])
 
                 if len(clean) >= 10:
