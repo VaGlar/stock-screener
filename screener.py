@@ -258,21 +258,31 @@ def score_stock(data, sector_cfg):
     s, f = 0, []
     pe = data.get("pe")
     ev_eb = data.get("ev_ebitda")
+    ev_rev = data.get("ev_revenue")
     peg = data.get("peg")
     fcf = data.get("fcf_yield")
     if pe and isinstance(pe, (int, float)) and pe > 0:
         if pe <= val_cfg.get("pe_cheap", 20): s += 7; f.append(f"💰 P/E {pe:.1f}x (cheap)")
         elif pe <= val_cfg.get("pe_fair", 30): s += 4; f.append(f"🟡 P/E {pe:.1f}x (fair)")
         else: f.append(f"🔴 P/E {pe:.1f}x")
-    if ev_eb and isinstance(ev_eb, (int, float)) and ev_eb > 0:
-        if ev_eb <= val_cfg.get("ev_ebitda_cheap", 12): s += 6; f.append(f"💰 EV/EBITDA {ev_eb:.1f}x")
-        elif ev_eb <= val_cfg.get("ev_ebitda_fair", 20): s += 3; f.append(f"🟡 EV/EBITDA {ev_eb:.1f}x")
+    # Sectors που ορίζουν ev_revenue thresholds τιμολογούνται σε EV/Revenue (π.χ. SaaS) — αλλιώς EV/EBITDA
+    uses_ev_revenue = "ev_revenue_cheap" in val_cfg
+    if uses_ev_revenue:
+        if ev_rev and isinstance(ev_rev, (int, float)) and ev_rev > 0:
+            if ev_rev <= val_cfg.get("ev_revenue_cheap", 8): s += 6; f.append(f"💰 EV/Revenue {ev_rev:.1f}x")
+            elif ev_rev <= val_cfg.get("ev_revenue_fair", 15): s += 3; f.append(f"🟡 EV/Revenue {ev_rev:.1f}x")
+        ev_metric_missing = ev_rev is None
+    else:
+        if ev_eb and isinstance(ev_eb, (int, float)) and ev_eb > 0:
+            if ev_eb <= val_cfg.get("ev_ebitda_cheap", 12): s += 6; f.append(f"💰 EV/EBITDA {ev_eb:.1f}x")
+            elif ev_eb <= val_cfg.get("ev_ebitda_fair", 20): s += 3; f.append(f"🟡 EV/EBITDA {ev_eb:.1f}x")
+        ev_metric_missing = ev_eb is None
     if peg and isinstance(peg, (int, float)) and 0 < peg <= 1.0: s += 4; f.append(f"💰 PEG {peg:.1f}")
     elif peg and isinstance(peg, (int, float)) and peg <= 2.0: s += 2; f.append(f"🟡 PEG {peg:.1f}")
     if fcf and isinstance(fcf, (int, float)):
         if fcf >= 0.05: s += 3; f.append(f"💰 FCF yield {fcf:.1%}")
         elif fcf >= 0.02: s += 1; f.append(f"🟡 FCF yield {fcf:.1%}")
-    if pe is None and ev_eb is None and peg is None and fcf is None:
+    if pe is None and ev_metric_missing and peg is None and fcf is None:
         # Fallback proxy — max 13/20
         pct = data.get("pct_from_high") or 0
         if pct <= -0.40: s += 13; f.append("🟡 Valuation N/A — deep discount proxy")

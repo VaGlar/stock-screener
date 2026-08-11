@@ -49,9 +49,9 @@
     "saas_cloud": {
       "_label": "SaaS / Cloud / Tech",
       "moat": {
-        "gross_margin_strong": 70,
-        "gross_margin_ok": 55,
-        "gross_margin_weak": 40,
+        "gross_margin_strong": 0.7,
+        "gross_margin_ok": 0.55,
+        "gross_margin_weak": 0.4,
         "note": "Υψηλά margins λόγω switching costs και data lock-in"
       },
       "growth": {
@@ -89,9 +89,9 @@
     "semiconductors": {
       "_label": "Semiconductors",
       "moat": {
-        "gross_margin_strong": 55,
-        "gross_margin_ok": 45,
-        "gross_margin_weak": 35,
+        "gross_margin_strong": 0.55,
+        "gross_margin_ok": 0.45,
+        "gross_margin_weak": 0.35,
         "note": "IP, manufacturing nodes, ecosystem lock-in"
       },
       "growth": {
@@ -129,9 +129,9 @@
     "consumer_beverages": {
       "_label": "Consumer / Beverages / Staples",
       "moat": {
-        "gross_margin_strong": 50,
-        "gross_margin_ok": 40,
-        "gross_margin_weak": 30,
+        "gross_margin_strong": 0.5,
+        "gross_margin_ok": 0.4,
+        "gross_margin_weak": 0.3,
         "note": "Brand loyalty και distribution network"
       },
       "growth": {
@@ -169,9 +169,9 @@
     "healthcare_biotech": {
       "_label": "Healthcare / Biotech",
       "moat": {
-        "gross_margin_strong": 70,
-        "gross_margin_ok": 55,
-        "gross_margin_weak": 40,
+        "gross_margin_strong": 0.7,
+        "gross_margin_ok": 0.55,
+        "gross_margin_weak": 0.4,
         "note": "Patents και FDA approval barriers"
       },
       "growth": {
@@ -209,9 +209,9 @@
     "energy": {
       "_label": "Energy / Commodities",
       "moat": {
-        "gross_margin_strong": 40,
-        "gross_margin_ok": 30,
-        "gross_margin_weak": 20,
+        "gross_margin_strong": 0.4,
+        "gross_margin_ok": 0.3,
+        "gross_margin_weak": 0.2,
         "note": "Commodity business — χαμηλό moat, price-taker"
       },
       "growth": {
@@ -249,9 +249,9 @@
     "mega_cap_tech": {
       "_label": "Mega Cap Tech",
       "moat": {
-        "gross_margin_strong": 50,
-        "gross_margin_ok": 40,
-        "gross_margin_weak": 30,
+        "gross_margin_strong": 0.5,
+        "gross_margin_ok": 0.4,
+        "gross_margin_weak": 0.3,
         "note": "Ecosystem lock-in, network effects, data moat"
       },
       "growth": {
@@ -289,9 +289,9 @@
     "default": {
       "_label": "Γενικό",
       "moat": {
-        "gross_margin_strong": 50,
-        "gross_margin_ok": 35,
-        "gross_margin_weak": 20
+        "gross_margin_strong": 0.5,
+        "gross_margin_ok": 0.35,
+        "gross_margin_weak": 0.2
       },
       "growth": {
         "revenue_growth_strong": 0.20,
