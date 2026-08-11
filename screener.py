@@ -13,6 +13,7 @@ import os
 import time
 import numpy as np
 from datetime import datetime
+from collections import Counter
 
 SENDER_EMAIL = "vasilisglaros@gmail.com"
 RECEIVER_EMAIL = "vasilisglaros@gmail.com"
@@ -511,6 +512,10 @@ def build_html_report(results, watchlist_meta, history=None):
     top5 = results_sorted[:5]
     rest = results_sorted[5:]
 
+    avg_score = (sum(r["total_score"] for r in results_sorted) / len(results_sorted)) if results_sorted else 0
+    sector_counts = Counter(r["data"].get("sector", "N/A") for r in results_sorted)
+    top_sector, top_sector_n = sector_counts.most_common(1)[0] if sector_counts else ("N/A", 0)
+
     def pillar_bar(label, score, max_score):
         score = score or 0
         pct = int((score / max_score) * 100)
@@ -537,7 +542,7 @@ def build_html_report(results, watchlist_meta, history=None):
         rsi_val = d.get('rsi') or 0
 
         cards_html += f"""
-        <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:14px;">
+        <div style="background:white;border:0.5px solid #e5e7eb;border-left:4px solid {lc};border-radius:12px;padding:18px;margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
                 <div>
                     <span style="font-size:20px;font-weight:600">{d['ticker']}</span>
@@ -584,7 +589,7 @@ def build_html_report(results, watchlist_meta, history=None):
         </div>"""
 
     rest_rows = ""
-    for r in rest:
+    for i, r in enumerate(rest):
         d = r["data"]
         total = r["total_score"]
         thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
@@ -594,7 +599,8 @@ def build_html_report(results, watchlist_meta, history=None):
         upside = f"+{((target-price)/price):.0%}" if (target and price and isinstance(target, (int,float)) and isinstance(price, (int,float))) else "N/A"
         pct_high = d.get('pct_from_high') or 0
         rsi_val = d.get('rsi') or 0
-        rest_rows += f"""<tr>
+        row_bg = "background:#f9fafb;" if i % 2 == 1 else ""
+        rest_rows += f"""<tr style="{row_bg}">
             <td style="padding:7px 8px;font-weight:500">{d['ticker']}<br>
                 <small style="color:#9ca3af;font-weight:400">{d['industry'][:22]}</small><br>
                 <small style="font-size:10px">{ledger_badge_compact(d['ticker'], total, d.get('price'), history)}</small></td>
@@ -635,6 +641,10 @@ def build_html_report(results, watchlist_meta, history=None):
         <div style="font-size:13px;color:#9ca3af;margin-top:4px">
             {date_str} · {total_scanned} stocks scanned · Top {MAX_REPORT}
         </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:20px;font-size:12px;color:#6b7280;">
+        <span>📊 Μ.Ο. score: {avg_score:.0f}/150</span>
+        <span>🏆 Κορυφαίος τομέας: {top_sector} ({top_sector_n}/{len(results_sorted)})</span>
     </div>
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
