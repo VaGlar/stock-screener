@@ -34,6 +34,10 @@ jobs:
               "HangSeng": "https://en.wikipedia.org/wiki/Hang_Seng_Index",
               "Nikkei225": "https://en.wikipedia.org/wiki/Nikkei_225",
               "BSESensex": "https://en.wikipedia.org/wiki/BSE_SENSEX",
+              "TAIEX": "https://en.wikipedia.org/wiki/TAIEX",
+              "TaiwanFTSE50": "https://en.wikipedia.org/wiki/FTSE_TWSE_Taiwan_50_Index",
+              "KOSPI": "https://en.wikipedia.org/wiki/KOSPI",
+              "KOSPI200": "https://en.wikipedia.org/wiki/KOSPI_200",
           }
 
           for name, url in URLS.items():
