@@ -6,11 +6,17 @@ Performance Report — v1
 
 import csv
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime
 import yfinance as yf
 
 LOG_FILE = "recommendations_log.csv"
 REPORT_FILE = "performance_report.csv"
+SENDER_EMAIL = "vasilisglaros@gmail.com"
+RECEIVER_EMAIL = "vasilisglaros@gmail.com"
+EMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 
 
 def load_log():
@@ -144,6 +150,39 @@ def render_html_summary(report_rows):
     </div>"""
 
 
+def build_html_report(report_rows):
+    valid = [r for r in report_rows if r.get("return_pct") is not None]
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    summary = render_html_summary(report_rows)
+    if not summary:
+        summary = '<p style="color:#6b7280;font-size:13px;">Δεν υπάρχουν ακόμα αρκετά δεδομένα για υπολογισμό απόδοσης.</p>'
+
+    return f"""<html><body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#f9fafb;">
+    <div style="background:#0f0f11;color:white;padding:24px;border-radius:12px;margin-bottom:24px;">
+        <div style="font-size:22px;font-weight:600">📈 Monthly Performance Report</div>
+        <div style="font-size:13px;color:#9ca3af;margin-top:4px">
+            {date_str} · {len(valid)} προτάσεις tracked
+        </div>
+    </div>
+    {summary}
+    <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
+        ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
+    </div>
+    </body></html>"""
+
+
+def send_email(html):
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"📈 Performance Report — {datetime.now().strftime('%d/%m/%Y')}"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = RECEIVER_EMAIL
+    msg.attach(MIMEText(html, "html"))
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(SENDER_EMAIL, EMAIL_PASSWORD)
+        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+    print("✅ Email sent!")
+
+
 def summarize(rows):
     valid = [r for r in rows if r["return_pct"] is not None]
     if not valid:
@@ -195,6 +234,9 @@ def main():
     print(f"✅ {len(report_rows)} γραμμές saved σε {REPORT_FILE}")
 
     summarize(report_rows)
+
+    html = build_html_report(report_rows)
+    send_email(html)
 
 
 if __name__ == "__main__":
