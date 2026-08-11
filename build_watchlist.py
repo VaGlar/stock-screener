@@ -65,9 +65,9 @@ WIKI_INDICES = {
     "CAC 40 🇫🇷": {
         "url": "https://en.wikipedia.org/wiki/CAC_40",
         "col": "Ticker",
-        "suffix": ".PA",
+        "suffix": "",
         "table_idx": 4,
-        "has_suffix": False,
+        "has_suffix": True,  # Tickers ήδη έχουν .PA (π.χ. "AC.PA") — has_suffix:False έσπαγε το suffix σε "ACPA.PA"
     },
     "Eurostoxx 50 🇪🇺": {
         "url": "https://en.wikipedia.org/wiki/Euro_Stoxx_50",
