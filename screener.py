@@ -75,7 +75,7 @@ def get_sector_config(info, config):
 
 # ── Data ──────────────────────────────────────────────────────────
 
-def get_stock_data(ticker, retries=1, delay=3):
+def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
     for attempt in range(retries + 1):
       try:
         stock = yf.Ticker(ticker)
@@ -178,7 +178,7 @@ def get_stock_data(ticker, retries=1, delay=3):
 
         return {
             "ticker": ticker,
-            "name": info.get("shortName", ticker),
+            "name": info.get("shortName") or info.get("longName") or fallback_name or ticker,
             "sector": info.get("sector", "N/A"),
             "industry": info.get("industry", "N/A"),
             "price": current_price,
@@ -628,6 +628,7 @@ def main():
             tickers = [t["symbol"] for t in raw[:MAX_TICKERS]]
         else:
             tickers = raw[:MAX_TICKERS]
+        ticker_names = watchlist_data.get("names", {})
     except FileNotFoundError:
         print("❌ watchlist.json not found!")
         return
@@ -637,7 +638,7 @@ def main():
 
     for i, ticker in enumerate(tickers, 1):
         print(f"  [{i}/{len(tickers)}] {ticker}")
-        data = get_stock_data(ticker)
+        data = get_stock_data(ticker, fallback_name=ticker_names.get(ticker))
         if not data:
             continue
         sector_cfg, sector_key = get_sector_config(data, config)
