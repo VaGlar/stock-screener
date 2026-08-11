@@ -504,7 +504,7 @@ def ledger_badge_compact(ticker, current_score, current_price, history):
     return f'<span style="color:{color}">🔁 x{len(past) + 1} Δ{sign}{score_delta}</span>'
 
 
-def build_html_report(results, watchlist_meta, history=None):
+def build_html_report(results, watchlist_meta, history=None, performance_html=""):
     date_str = datetime.now().strftime("%d/%m/%Y")
     total_scanned = watchlist_meta.get("total_tickers", "N/A")
 
@@ -649,6 +649,7 @@ def build_html_report(results, watchlist_meta, history=None):
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
     {rest_html}
+    {performance_html}
     <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
         ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
     </div>
@@ -717,8 +718,18 @@ def main():
     print(f"\n✅ {len(results)} stocks passed filters")
     results_reported = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
     history = load_recommendation_history()  # πριν το log_recommendations, αλλιώς θα δει τη σημερινή γραμμή ως "παρελθόν"
+
+    performance_html = ""
+    ledger_rows = [row for rows in history.values() for row in rows]
+    if ledger_rows:
+        from performance_report import get_current_prices, compute_report_rows, render_html_summary
+        print(f"\n📈 Υπολογισμός πραγματικής απόδοσης {len(ledger_rows)} προηγούμενων προτάσεων...")
+        perf_tickers = sorted({row["ticker"] for row in ledger_rows})
+        current_prices = get_current_prices(perf_tickers)
+        performance_html = render_html_summary(compute_report_rows(ledger_rows, current_prices))
+
     log_recommendations(results_reported)
-    html = build_html_report(results, watchlist_data, history)
+    html = build_html_report(results, watchlist_data, history, performance_html)
     send_email(html)
 
 

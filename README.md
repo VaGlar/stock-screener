@@ -67,8 +67,40 @@
 - **65-79** → WATCH
 - **<65** → PASS
 
-Τα thresholds αλλάζουν ανά sector — π.χ. Small Cap Growth έχει χαμηλότερα (90/70/55) γιατί είναι δύσκολο να πάρεις υψηλό score με ζημιογόνες εταιρείες.
+Τα thresholds διαβάζονται ανά sector από το `sector_config.json` (μπορούν να διαφέρουν ανά κλάδο), αλλά αυτή τη στιγμή όλα τα configured sectors χρησιμοποιούν τα ίδια 65/80/100 — αν θες διαφορετικά όρια για κάποιον κλάδο, άλλαξέ τα εκεί.
 
 ---
 
 **Pillar minimums (gate):** Μόνο τα core-quality pillars (Moat, Growth, EVA) πρέπει να περάσουν ένα ελάχιστο για να μην αποκλειστεί μια μετοχή. Valuation/Technicals/SAM/Catalyst επηρεάζουν το total score αλλά δεν αποκλείουν πλέον μόνα τους — έτσι μια ακριβή, momentum-quality μετοχή (π.χ. κοντά σε 52w high) δεν αποκλείεται απλώς επειδή δεν είναι "φθηνή" ή δεν έχει πέσει.
+
+---
+
+## Recommendations ledger & report extras
+
+Κάθε φορά που το screener.py στέλνει email, καταγράφει ό,τι πραγματικά προτάθηκε (ticker, ημερομηνία, τιμή, score, action) στο `recommendations_log.csv`. Αυτό το ledger χρησιμοποιείται με δύο τρόπους:
+
+- **Badges στο ίδιο το report** — κάθε μετοχή δείχνει αν είναι `🆕 Νέα πρόταση` ή, αν έχει ξαναπροταθεί, `🔁 3η φορά · Δscore +18 (95→113) · +12.4% από τελευταία πρόταση`. Καμία επιπλέον κλήση API — συγκρίνει με ό,τι έχει ήδη καταγραφεί.
+- **`performance_report.py`** — διαβάζει ολόκληρο το ledger, τραβάει τρέχουσες τιμές, και βγάζει breakdown πραγματικής απόδοσης ανά action label και holding period. Τρέχει μηνιαία (βλ. GitHub Actions παρακάτω). Το ledger χτίζεται μόνο από τη στιγμή που ενεργοποιήθηκε το logging και μετά — δεν μπορεί να ανακατασκευάσει τι προτάθηκε πριν.
+
+Το report επίσης δείχνει ένα μικρό stats banner (μέσος όρος score, κυρίαρχος τομέας), zebra striping στον πίνακα Watchlist, και χρωματιστό border στις top-5 κάρτες ανάλογα με το action tier.
+
+---
+
+## Εργαλεία
+
+- **`test_ticker.py`** — έλεγχος μίας μετοχής χωρίς να τρέξει όλο το pipeline: `python test_ticker.py MSFT`. Τυπώνει breakdown ανά pillar (ίδια flags με το πραγματικό email) και αν περνάει το gate.
+- **`backtest.py`** — τρέχει το `score_stock()` πάνω σε ιστορικά σημεία τιμής για να ελέγξει αν το total score προβλέπει forward returns. Τα Technicals/Catalyst είναι σωστά point-in-time· τα fundamentals pillars χρησιμοποιούν το σημερινό snapshot του yfinance για κάθε ιστορική ημερομηνία (look-ahead bias — πιο αξιόπιστο για timing παρά για τα fundamentals pillars). Βγάζει `backtest_results.csv`.
+- **`performance_report.py`** — βλ. παραπάνω.
+
+---
+
+## GitHub Actions
+
+| Workflow | Πότε τρέχει | Τι κάνει |
+|---|---|---|
+| `weekly_screener.yml` | Κάθε Δευτέρα 07:00 (Ελλάδα) + manual | Χτίζει watchlist, τρέχει το screener, στέλνει email, commit-άρει το ledger πίσω στο repo |
+| `backtest.yml` | Μόνο manual | Χτίζει watchlist, τρέχει το `backtest.py`, ανεβάζει `backtest_results.csv` ως artifact |
+| `performance_report.yml` | 1η κάθε μήνα 07:00 (Ελλάδα) + manual | Τρέχει το `performance_report.py`, ανεβάζει `performance_report.csv` ως artifact |
+| `debug_wikipedia.yml` | Μόνο manual | Δείχνει τη δομή (columns, table index) όλων των Wikipedia πηγών — χρήσιμο πριν προσθέσεις νέα αγορά στο `WIKI_INDICES` |
+
+Όταν τρέχεις οποιοδήποτε workflow χειροκίνητα, βεβαιώσου ότι έχεις επιλέξει το σωστό branch στο dropdown του "Run workflow" — αλλιώς θα τρέξει πάνω στο `main` ό,τι κι αν δουλεύεις σε feature branch.
