@@ -83,6 +83,13 @@ WIKI_INDICES = {
         "table_idx": 2,
         "has_suffix": True,  # Tickers ήδη έχουν .BO
     },
+    "KOSPI 200 🇰🇷": {
+        "url": "https://en.wikipedia.org/wiki/KOSPI_200",
+        "col": "Symbol",
+        "suffix": ".KS",
+        "table_idx": 2,
+        "has_suffix": False,  # Tickers είναι 6-ψήφιοι αριθμητικοί κωδικοί (π.χ. 005930) — θα προσθέσουμε .KS
+    },
 }
 
 
