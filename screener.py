@@ -5,6 +5,7 @@ Weekly Stock Screener — v3
 
 import yfinance as yf
 import json
+import csv
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -18,6 +19,7 @@ RECEIVER_EMAIL = "vasilisglaros@gmail.com"
 EMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
 MAX_TICKERS = 2000
 MAX_REPORT = 30
+RECOMMENDATIONS_LOG = "recommendations_log.csv"
 
 
 # ── Safe float helper ─────────────────────────────────────────────
@@ -412,6 +414,25 @@ def format_market_cap(mc):
     return f"${mc/1e6:.0f}M"
 
 
+# ── Recommendations Log ──────────────────────────────────────────────
+# Καταγράφει ό,τι πραγματικά στέλνεται στο email, ώστε αργότερα να μπορούμε
+# να μετρήσουμε την πραγματική απόδοση των προτάσεων (βλ. performance_report.py)
+
+def log_recommendations(results_reported):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    file_exists = os.path.exists(RECOMMENDATIONS_LOG)
+    with open(RECOMMENDATIONS_LOG, "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["date", "ticker", "name", "sector", "price", "total_score", "action"])
+        for r in results_reported:
+            d = r["data"]
+            thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
+            action = get_action(r["total_score"], thresholds)[0]
+            writer.writerow([date_str, d["ticker"], d["name"], d["sector"], d["price"], r["total_score"], action])
+    print(f"📝 {len(results_reported)} προτάσεις καταγράφηκαν στο {RECOMMENDATIONS_LOG}")
+
+
 # ── HTML Report ───────────────────────────────────────────────────
 
 def build_html_report(results, watchlist_meta):
@@ -613,6 +634,8 @@ def main():
         time.sleep(0.5)
 
     print(f"\n✅ {len(results)} stocks passed filters")
+    results_reported = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
+    log_recommendations(results_reported)
     html = build_html_report(results, watchlist_data)
     send_email(html)
 
