@@ -29,3 +29,33 @@ date,ticker,name,sector,price,total_score,action
 2026-08-11,AAF.L,AIRTEL AFRICA PLC ORD USD0.50,Communication Services,326.6,86,BUY
 2026-08-11,036570.KS,NC,Communication Services,255500.0,86,BUY
 2026-08-11,IAG,Iamgold Corporation,Basic Materials,18.43,85,BUY
+2026-08-17,FICO,Fair Isaac Corporation,Technology,1085.78,122,STRONG BUY
+2026-08-17,MU,"Micron Technology, Inc.",Technology,971.66,103,STRONG BUY
+2026-08-17,NVDA,NVIDIA Corporation,Technology,225.16,102,STRONG BUY
+2026-08-17,000660.KS,SK hynix,Technology,1645000.0,102,STRONG BUY
+2026-08-17,016360.KS,SamsungSecu,Financial Services,93000.0,100,STRONG BUY
+2026-08-17,INTU,Intuit Inc.,Technology,345.66,99,BUY
+2026-08-17,RDDT,"Reddit, Inc.",Communication Services,178.09,97,BUY
+2026-08-17,NXPI,NXP Semiconductors N.V.,Technology,234.71,97,BUY
+2026-08-17,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,583.0,97,BUY
+2026-08-17,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,16.07,94,BUY
+2026-08-17,PBR,Petroleo Brasileiro S.A. Petrob,Energy,17.88,92,BUY
+2026-08-17,ADI,"Analog Devices, Inc.",Technology,389.39,92,BUY
+2026-08-17,G24.DE,Scout24 SE                    N,Communication Services,78.0,92,BUY
+2026-08-17,SKHY,SK hynix Inc.,Technology,166.33,91,BUY
+2026-08-17,NLY,Annaly Capital Management Inc.,Real Estate,23.33,89,BUY
+2026-08-17,TAL,TAL Education Group,Consumer Defensive,11.65,89,BUY
+2026-08-17,CINF,Cincinnati Financial Corporatio,Financial Services,173.17,89,BUY
+2026-08-17,483650.KS,d'Alba Global,Consumer Defensive,228500.0,89,BUY
+2026-08-17,CRM,"Salesforce, Inc.",Technology,196.21,87,BUY
+2026-08-17,EOG,"EOG Resources, Inc.",Energy,142.61,87,BUY
+2026-08-17,278470.KS,APR,Consumer Defensive,390500.0,87,BUY
+2026-08-17,039490.KS,KIWOOM,Financial Services,300500.0,87,BUY
+2026-08-17,GOOG,Alphabet Inc.,Communication Services,343.54,86,BUY
+2026-08-17,AAF.L,AIRTEL AFRICA PLC ORD USD0.50,Communication Services,329.2,86,BUY
+2026-08-17,ABI.BR,AB INBEV,Consumer Defensive,68.62,86,BUY
+2026-08-17,VG,"Venture Global, Inc.",Energy,13.99,85,BUY
+2026-08-17,KGC,Kinross Gold Corporation,Basic Materials,27.31,85,BUY
+2026-08-17,ALL,Allstate Corporation (The),Financial Services,261.41,85,BUY
+2026-08-17,ADSK,"Autodesk, Inc.",Technology,251.66,85,BUY
+2026-08-17,FRES.L,Fresnillo plc,Basic Materials,2880.0,85,BUY
