@@ -475,19 +475,19 @@ def load_recommendation_history():
 def ledger_badge(ticker, current_score, current_price, history):
     past = (history or {}).get(ticker, [])
     if not past:
-        return '<span style="color:#2563eb">🆕 Νέα πρόταση</span>'
+        return '<span style="color:#2563eb">🆕 New pick</span>'
     last = past[-1]
     try:
         last_score = int(last["total_score"])
         last_price = float(last["price"])
     except (ValueError, KeyError, TypeError):
-        return f"🔁 {len(past) + 1}η φορά"
+        return f"🔁 Recommended {len(past) + 1}x"
     score_delta = current_score - last_score
     delta_str = f"+{score_delta}" if score_delta >= 0 else str(score_delta)
     price_str = f"{(current_price - last_price) / last_price:+.1%}" if (isinstance(current_price, (int, float)) and last_price) else "N/A"
     color = "#16a34a" if score_delta >= 0 else "#dc2626"
-    return (f'<span style="color:{color}">🔁 {len(past) + 1}η φορά · Δscore {delta_str} '
-            f'({last_score}→{current_score}) · {price_str} από τελευταία πρόταση ({last["date"]})</span>')
+    return (f'<span style="color:{color}">🔁 Recommended {len(past) + 1}x · Δscore {delta_str} '
+            f'({last_score}→{current_score}) · {price_str} since last pick ({last["date"]})</span>')
 
 
 def ledger_badge_compact(ticker, current_score, current_price, history):
@@ -643,16 +643,13 @@ def build_html_report(results, watchlist_meta, history=None, performance_html=""
         </div>
     </div>
     <div style="display:flex;gap:16px;margin-bottom:20px;font-size:12px;color:#6b7280;">
-        <span>📊 Μ.Ο. score: {avg_score:.0f}/150</span>
-        <span>🏆 Κορυφαίος τομέας: {top_sector} ({top_sector_n}/{len(results_sorted)})</span>
+        <span>📊 Avg score: {avg_score:.0f}/150</span>
+        <span>🏆 Top sector: {top_sector} ({top_sector_n}/{len(results_sorted)})</span>
     </div>
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
     {rest_html}
     {performance_html}
-    <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
-        ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
-    </div>
     </body></html>"""
 
 
