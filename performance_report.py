@@ -167,9 +167,6 @@ def build_html_report(report_rows):
         </div>
     </div>
     {summary}
-    <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
-        ⚠️ For informational purposes only. Not investment advice.
-    </div>
     </body></html>"""
 
 
