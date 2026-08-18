@@ -83,7 +83,7 @@ def _breakdown_table(groups, order):
             <tr style="background:#f3f4f6;font-size:11px;color:#6b7280">
                 <th style="padding:6px 8px;text-align:left"></th>
                 <th style="padding:6px 8px;text-align:left">#</th>
-                <th style="padding:6px 8px;text-align:left">Μέση απόδοση</th>
+                <th style="padding:6px 8px;text-align:left">Avg return</th>
                 <th style="padding:6px 8px;text-align:left">Hit rate</th>
             </tr>
             {rows_html}
@@ -140,12 +140,12 @@ def render_html_summary(report_rows):
 
     return f"""
     <div style="margin-top:28px">
-        <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">📈 Πραγματική απόδοση προτάσεων ({len(valid)} tracked)</h2>
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">📈 Real recommendation performance ({len(valid)} tracked)</h2>
         <div style="background:white;border:0.5px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;">
-            <div style="font-size:13px;color:#6b7280;margin-bottom:14px">Μέση απόδοση: <strong style="color:{avg_color}">{avg_ret:+.1%}</strong> · Hit rate: <strong>{hit_rate:.0%}</strong></div>
-            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Ανά action label</div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:14px">Avg return: <strong style="color:{avg_color}">{avg_ret:+.1%}</strong> · Hit rate: <strong>{hit_rate:.0%}</strong></div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">By action label</div>
             {action_table}
-            <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">Ανά holding period</div>
+            <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">By holding period</div>
             {period_table}
             {highlights}
         </div>
@@ -157,18 +157,18 @@ def build_html_report(report_rows):
     date_str = datetime.now().strftime("%d/%m/%Y")
     summary = render_html_summary(report_rows)
     if not summary:
-        summary = '<p style="color:#6b7280;font-size:13px;">Δεν υπάρχουν ακόμα αρκετά δεδομένα για υπολογισμό απόδοσης.</p>'
+        summary = '<p style="color:#6b7280;font-size:13px;">Not enough data yet to calculate performance.</p>'
 
     return f"""<html><body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#f9fafb;">
     <div style="background:#0f0f11;color:white;padding:24px;border-radius:12px;margin-bottom:24px;">
         <div style="font-size:22px;font-weight:600">📈 Monthly Performance Report</div>
         <div style="font-size:13px;color:#9ca3af;margin-top:4px">
-            {date_str} · {len(valid)} προτάσεις tracked
+            {date_str} · {len(valid)} recommendations tracked
         </div>
     </div>
     {summary}
     <div style="margin-top:28px;padding:12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#9ca3af;">
-        ⚠️ Ενημερωτικός σκοπός μόνο. Δεν αποτελεί επενδυτική συμβουλή.
+        ⚠️ For informational purposes only. Not investment advice.
     </div>
     </body></html>"""
 
