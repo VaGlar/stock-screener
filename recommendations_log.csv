@@ -59,3 +59,33 @@ date,ticker,name,sector,price,total_score,action
 2026-08-17,ALL,Allstate Corporation (The),Financial Services,261.41,85,BUY
 2026-08-17,ADSK,"Autodesk, Inc.",Technology,251.66,85,BUY
 2026-08-17,FRES.L,Fresnillo plc,Basic Materials,2880.0,85,BUY
+2026-08-24,FICO,Fair Isaac Corporation,Technology,1172.67,117,STRONG BUY
+2026-08-24,402340.KS,SKSQUARE,Technology,1082000.0,103,STRONG BUY
+2026-08-24,NVDA,NVIDIA Corporation,Technology,214.72,101,STRONG BUY
+2026-08-24,000660.KS,SK hynix,Technology,1700000.0,100,STRONG BUY
+2026-08-24,MU,"Micron Technology, Inc.",Technology,966.78,98,BUY
+2026-08-24,SKHY,SK hynix Inc.,Technology,163.41,97,BUY
+2026-08-24,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,584.0,95,BUY
+2026-08-24,GOOG,Alphabet Inc.,Communication Services,341.75,94,BUY
+2026-08-24,INTU,Intuit Inc.,Technology,367.0,92,BUY
+2026-08-24,G24.DE,Scout24 SE                    N,Communication Services,77.45,92,BUY
+2026-08-24,PBR,Petroleo Brasileiro S.A. Petrob,Energy,19.15,91,BUY
+2026-08-24,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,17.22,91,BUY
+2026-08-24,NXPI,NXP Semiconductors N.V.,Technology,225.56,91,BUY
+2026-08-24,192080.KS,DoubleUGames,Communication Services,58550.0,91,BUY
+2026-08-24,016360.KS,SamsungSecu,Financial Services,86400.0,91,BUY
+2026-08-24,ABI.BR,AB INBEV,Consumer Defensive,67.16,90,BUY
+2026-08-24,PARR,"Par Pacific Holdings, Inc. Comm",Energy,79.03,89,BUY
+2026-08-24,GOOGL,Alphabet Inc.,Communication Services,344.82,89,BUY
+2026-08-24,UU.L,UNITED UTILITIES GROUP PLC ORD ,Utilities,1424.0,89,BUY
+2026-08-24,TSM,Taiwan Semiconductor Manufactur,Technology,418.95,88,BUY
+2026-08-24,FRES.L,FRESNILLO PLC ORD USD0.50,Basic Materials,3219.0,88,BUY
+2026-08-24,AVGO,Broadcom Inc.,Technology,368.45,87,BUY
+2026-08-24,AMP,"Ameriprise Financial, Inc.",Financial Services,555.59,87,BUY
+2026-08-24,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,209.62,87,BUY
+2026-08-24,039490.KS,KIWOOM,Financial Services,266000.0,87,BUY
+2026-08-24,CINF,Cincinnati Financial Corporatio,Financial Services,168.29,86,BUY
+2026-08-24,ADSK,"Autodesk, Inc.",Technology,253.825,85,BUY
+2026-08-24,INCY,Incyte Corporation,Healthcare,127.81,85,BUY
+2026-08-24,CRM,"Salesforce, Inc.",Technology,209.17,85,BUY
+2026-08-24,005930.KS,SamsungElec,Technology,257250.0,85,BUY
