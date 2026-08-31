@@ -90,13 +90,21 @@ def _breakdown_table(groups, order):
         </table>"""
 
 
-def _stock_row(r):
-    color = "#16a34a" if r["return_pct"] >= 0 else "#dc2626"
+def _stock_row_multi(ticker, rows):
+    """rows: όλες οι καταγραφές αυτού του ticker, ταξινομημένες πιο πρόσφατη πρώτα.
+    Δείχνει days_held/return ανά καταγραφή στην ίδια γραμμή (π.χ. 7d/14d, +22.4%/+30.5%)
+    αντί να διαλέγει μόνο μία και να πετάει τις υπόλοιπες."""
+    action = rows[0]["action"]
+    days_str = "/".join(f"{r['days_held']}d" for r in rows)
+    ret_str = "/".join(
+        f'<span style="color:{"#16a34a" if r["return_pct"] >= 0 else "#dc2626"}">{r["return_pct"]:+.1%}</span>'
+        for r in rows
+    )
     return f"""<tr>
-        <td style="padding:6px 8px;font-weight:500">{r['ticker']}</td>
-        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{r['action']}</td>
-        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{r['days_held']}d</td>
-        <td style="padding:6px 8px;color:{color};font-weight:600">{r['return_pct']:+.1%}</td>
+        <td style="padding:6px 8px;font-weight:500">{ticker}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{action}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{days_str}</td>
+        <td style="padding:6px 8px;font-weight:600">{ret_str}</td>
     </tr>"""
 
 
@@ -124,25 +132,26 @@ def render_html_summary(report_rows):
 
     # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
     actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
-    # Μία γραμμή ανά ticker (η πιο πρόσφατη καταγραφή) — αλλιώς μια μετοχή που προτάθηκε
-    # πολλές φορές γεμίζει μόνη της το top 5 αντί να φαίνονται 5 διαφορετικές εταιρείες
-    latest_per_ticker = {}
+    # Μία γραμμή ανά ticker, με ΟΛΕΣ τις καταγραφές του (πιο πρόσφατη πρώτη) — δεν πετάμε
+    # καμία πρόταση, απλά τις δείχνουμε μαζί στην ίδια γραμμή αντί να διπλασιάζεται το ticker
+    by_ticker = {}
     for r in actionable:
-        t = r["ticker"]
-        if t not in latest_per_ticker or r["date"] > latest_per_ticker[t]["date"]:
-            latest_per_ticker[t] = r
-    actionable_unique = list(latest_per_ticker.values())
-    winners = sorted(actionable_unique, key=lambda r: r["return_pct"], reverse=True)[:5]
-    losers = sorted(actionable_unique, key=lambda r: r["return_pct"])[:5]
+        by_ticker.setdefault(r["ticker"], []).append(r)
+    for t in by_ticker:
+        by_ticker[t].sort(key=lambda r: r["days_held"])  # πιο πρόσφατη (λιγότερες μέρες) πρώτη
+
+    ticker_items = list(by_ticker.items())
+    winner_tickers = sorted(ticker_items, key=lambda kv: max(r["return_pct"] for r in kv[1]), reverse=True)[:5]
+    loser_tickers = sorted(ticker_items, key=lambda kv: min(r["return_pct"] for r in kv[1]))[:5]
     highlights = "" if not actionable else f"""
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
             <div>
                 <div style="font-size:12px;color:#16a34a;font-weight:600;margin-bottom:6px">🏆 Top 5 winners</div>
-                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row(r) for r in winners)}</table>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row_multi(t, rows) for t, rows in winner_tickers)}</table>
             </div>
             <div>
                 <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:6px">📉 Top 5 laggards</div>
-                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row(r) for r in losers)}</table>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row_multi(t, rows) for t, rows in loser_tickers)}</table>
             </div>
         </div>"""
 
