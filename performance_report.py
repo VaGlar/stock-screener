@@ -124,8 +124,16 @@ def render_html_summary(report_rows):
 
     # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
     actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
-    winners = sorted(actionable, key=lambda r: r["return_pct"], reverse=True)[:5]
-    losers = sorted(actionable, key=lambda r: r["return_pct"])[:5]
+    # Μία γραμμή ανά ticker (η πιο πρόσφατη καταγραφή) — αλλιώς μια μετοχή που προτάθηκε
+    # πολλές φορές γεμίζει μόνη της το top 5 αντί να φαίνονται 5 διαφορετικές εταιρείες
+    latest_per_ticker = {}
+    for r in actionable:
+        t = r["ticker"]
+        if t not in latest_per_ticker or r["date"] > latest_per_ticker[t]["date"]:
+            latest_per_ticker[t] = r
+    actionable_unique = list(latest_per_ticker.values())
+    winners = sorted(actionable_unique, key=lambda r: r["return_pct"], reverse=True)[:5]
+    losers = sorted(actionable_unique, key=lambda r: r["return_pct"])[:5]
     highlights = "" if not actionable else f"""
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
             <div>
