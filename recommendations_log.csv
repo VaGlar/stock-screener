@@ -89,3 +89,33 @@ date,ticker,name,sector,price,total_score,action
 2026-08-24,INCY,Incyte Corporation,Healthcare,127.81,85,BUY
 2026-08-24,CRM,"Salesforce, Inc.",Technology,209.17,85,BUY
 2026-08-24,005930.KS,SamsungElec,Technology,257250.0,85,BUY
+2026-08-31,FICO,Fair Isaac Corporation,Technology,1153.57,117,STRONG BUY
+2026-08-31,NVDA,NVIDIA Corporation,Technology,217.55,105,STRONG BUY
+2026-08-31,MU,"Micron Technology, Inc.",Technology,932.86,102,STRONG BUY
+2026-08-31,HMY,Harmony Gold Mining Company Lim,Basic Materials,20.23,101,STRONG BUY
+2026-08-31,000660.KS,SK hynix,Technology,1674000.0,100,STRONG BUY
+2026-08-31,402340.KS,SKSQUARE,Technology,1037000.0,99,BUY
+2026-08-31,SKHY,SK hynix Inc.,Technology,161.04,97,BUY
+2026-08-31,APP,Applovin Corporation,Communication Services,317.76,96,BUY
+2026-08-31,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,205.63,95,BUY
+2026-08-31,NXPI,NXP Semiconductors N.V.,Technology,223.58,94,BUY
+2026-08-31,GOOG,Alphabet Inc.,Communication Services,342.88,92,BUY
+2026-08-31,PBR,Petroleo Brasileiro S.A. Petrob,Energy,18.53,91,BUY
+2026-08-31,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,16.77,91,BUY
+2026-08-31,AVGO,Broadcom Inc.,Technology,368.79,91,BUY
+2026-08-31,192080.KS,DoubleUGames,Communication Services,58500.0,91,BUY
+2026-08-31,039490.KS,KIWOOM,Financial Services,277500.0,90,BUY
+2026-08-31,ADI,"Analog Devices, Inc.",Technology,361.78,89,BUY
+2026-08-31,ALAB,"Astera Labs, Inc.",Technology,289.47,89,BUY
+2026-08-31,MCHP,Microchip Technology Incorporat,Technology,72.93,89,BUY
+2026-08-31,483650.KS,d'Alba Global,Consumer Defensive,220000.0,89,BUY
+2026-08-31,016360.KS,SamsungSecu,Financial Services,88000.0,89,BUY
+2026-08-31,G24.DE,Scout24 SE                    N,Communication Services,80.2,88,BUY
+2026-08-31,005940.KS,NHIS,Financial Services,26550.0,88,BUY
+2026-08-31,ONON,On Holding AG,Consumer Cyclical,28.85,87,BUY
+2026-08-31,AMP,"Ameriprise Financial, Inc.",Financial Services,559.32,87,BUY
+2026-08-31,CINF,Cincinnati Financial Corporatio,Financial Services,171.97,87,BUY
+2026-08-31,KGC,Kinross Gold Corporation,Basic Materials,31.27,86,BUY
+2026-08-31,TSM,Taiwan Semiconductor Manufactur,Technology,417.52,86,BUY
+2026-08-31,MPWR,"Monolithic Power Systems, Inc.",Technology,1256.26,86,BUY
+2026-08-31,TER,"Teradyne, Inc.",Technology,354.97,86,BUY
