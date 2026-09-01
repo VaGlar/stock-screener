@@ -131,6 +131,12 @@ def render_html_summary(report_rows, top_n=5):
         by_period.setdefault(bucket_days(r["days_held"]), []).append(r)
     period_table = _breakdown_table(by_period, ["<30d", "30-90d", "90-180d", "180d+"])
 
+    by_sector = {}
+    for r in valid:
+        by_sector.setdefault(r.get("sector") or "N/A", []).append(r)
+    sector_order = sorted(by_sector, key=lambda s: len(by_sector[s]), reverse=True)  # πιο συχνός τομέας πρώτος
+    sector_table = _breakdown_table(by_sector, sector_order)
+
     # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
     actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
     # Μία γραμμή ανά ticker, με ΟΛΕΣ τις καταγραφές του (πιο πρόσφατη πρώτη) — δεν πετάμε
@@ -165,6 +171,8 @@ def render_html_summary(report_rows, top_n=5):
             {action_table}
             <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">By holding period</div>
             {period_table}
+            <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">By sector</div>
+            {sector_table}
             {highlights}
         </div>
     </div>"""
