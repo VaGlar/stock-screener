@@ -108,8 +108,9 @@ def _stock_row_multi(ticker, rows):
     </tr>"""
 
 
-def render_html_summary(report_rows):
-    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report.
+def render_html_summary(report_rows, top_n=5):
+    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report (ή, με
+    μεγαλύτερο top_n, το πλήρες μηνιαίο performance report).
     # = πλήθος καταγραφών (ledger rows) στην ομάδα, όχι μοναδικά tickers — μια μετοχή
     που προτάθηκε πολλές φορές μετράει μία φορά ανά πρόταση."""
     valid = [r for r in report_rows if r.get("return_pct") is not None]
@@ -130,6 +131,12 @@ def render_html_summary(report_rows):
         by_period.setdefault(bucket_days(r["days_held"]), []).append(r)
     period_table = _breakdown_table(by_period, ["<30d", "30-90d", "90-180d", "180d+"])
 
+    by_sector = {}
+    for r in valid:
+        by_sector.setdefault(r.get("sector") or "N/A", []).append(r)
+    sector_order = sorted(by_sector, key=lambda s: len(by_sector[s]), reverse=True)  # πιο συχνός τομέας πρώτος
+    sector_table = _breakdown_table(by_sector, sector_order)
+
     # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
     actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
     # Μία γραμμή ανά ticker, με ΟΛΕΣ τις καταγραφές του (πιο πρόσφατη πρώτη) — δεν πετάμε
@@ -141,16 +148,16 @@ def render_html_summary(report_rows):
         by_ticker[t].sort(key=lambda r: r["days_held"])  # πιο πρόσφατη (λιγότερες μέρες) πρώτη
 
     ticker_items = list(by_ticker.items())
-    winner_tickers = sorted(ticker_items, key=lambda kv: max(r["return_pct"] for r in kv[1]), reverse=True)[:5]
-    loser_tickers = sorted(ticker_items, key=lambda kv: min(r["return_pct"] for r in kv[1]))[:5]
+    winner_tickers = sorted(ticker_items, key=lambda kv: max(r["return_pct"] for r in kv[1]), reverse=True)[:top_n]
+    loser_tickers = sorted(ticker_items, key=lambda kv: min(r["return_pct"] for r in kv[1]))[:top_n]
     highlights = "" if not actionable else f"""
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
             <div>
-                <div style="font-size:12px;color:#16a34a;font-weight:600;margin-bottom:6px">🏆 Top 5 winners</div>
+                <div style="font-size:12px;color:#16a34a;font-weight:600;margin-bottom:6px">🏆 Top {top_n} winners</div>
                 <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row_multi(t, rows) for t, rows in winner_tickers)}</table>
             </div>
             <div>
-                <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:6px">📉 Top 5 laggards</div>
+                <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:6px">📉 Top {top_n} laggards</div>
                 <table style="width:100%;border-collapse:collapse;font-size:12px;">{''.join(_stock_row_multi(t, rows) for t, rows in loser_tickers)}</table>
             </div>
         </div>"""
@@ -164,6 +171,8 @@ def render_html_summary(report_rows):
             {action_table}
             <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">By holding period</div>
             {period_table}
+            <div style="font-size:11px;color:#9ca3af;margin:14px 0 4px">By sector</div>
+            {sector_table}
             {highlights}
         </div>
     </div>"""
@@ -172,7 +181,7 @@ def render_html_summary(report_rows):
 def build_html_report(report_rows):
     valid = [r for r in report_rows if r.get("return_pct") is not None]
     date_str = datetime.now().strftime("%d/%m/%Y")
-    summary = render_html_summary(report_rows)
+    summary = render_html_summary(report_rows, top_n=20)
     if not summary:
         summary = '<p style="color:#6b7280;font-size:13px;">Not enough data yet to calculate performance.</p>'
 

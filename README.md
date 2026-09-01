@@ -77,12 +77,18 @@
 
 ## Recommendations ledger & report extras
 
-Κάθε φορά που το screener.py στέλνει email, καταγράφει ό,τι πραγματικά προτάθηκε (ticker, ημερομηνία, τιμή, score, action) στο `recommendations_log.csv`. Αυτό το ledger χρησιμοποιείται με δύο τρόπους:
+Κάθε φορά που το screener.py στέλνει email, καταγράφει ό,τι πραγματικά προτάθηκε (ticker, ημερομηνία, τιμή, score, action) στο `recommendations_log.csv`. Αυτό το ledger τροφοδοτεί δύο πράγματα:
 
-- **Badges στο ίδιο το report** — κάθε μετοχή δείχνει αν είναι `🆕 Νέα πρόταση` ή, αν έχει ξαναπροταθεί, `🔁 3η φορά · Δscore +18 (95→113) · +12.4% από τελευταία πρόταση`. Καμία επιπλέον κλήση API — συγκρίνει με ό,τι έχει ήδη καταγραφεί.
-- **`performance_report.py`** — διαβάζει ολόκληρο το ledger, τραβάει τρέχουσες τιμές, και βγάζει breakdown πραγματικής απόδοσης ανά action label και holding period. Τρέχει μηνιαία (βλ. GitHub Actions παρακάτω). Το ledger χτίζεται μόνο από τη στιγμή που ενεργοποιήθηκε το logging και μετά — δεν μπορεί να ανακατασκευάσει τι προτάθηκε πριν.
+- **Badges στο ίδιο το weekly report** — κάθε μετοχή δείχνει αν είναι `🆕 New pick` ή, αν έχει ξαναπροταθεί, `🔁 Recommended 3x · Δscore +18 (95→113) · +12.4% since last pick`. Καμία επιπλέον κλήση API — συγκρίνει με ό,τι έχει ήδη καταγραφεί.
+- **Performance section** (`render_html_summary()` στο `performance_report.py`) — εμφανίζεται σε **δύο σημεία**:
+  - **Ενσωματωμένο στο κάτω μέρος κάθε weekly email** (compact: top 5 winners/laggards)
+  - **Ξεχωριστό μηνιαίο email** από το `performance_report.py` (πληρέστερο: top 20 winners/laggards)
 
-Το report επίσης δείχνει ένα μικρό stats banner (μέσος όρος score, κυρίαρχος τομέας), zebra striping στον πίνακα Watchlist, και χρωματιστό border στις top-5 κάρτες ανάλογα με το action tier.
+  Και τα δύο δείχνουν: συνολικό avg return + hit rate, breakdown ανά action label, ανά holding period (`<30d`, `30-90d`, `90-180d`, `180d+`), και ανά sector (ταξινομημένο με τον πιο συχνό τομέα πρώτο). Τα winners/laggards είναι μόνο από STRONG BUY/BUY (όχι WATCH/PASS — αυτά δεν θα τα αγόραζες), ένα ticker εμφανίζεται μία φορά ακόμα κι αν προτάθηκε πολλές φορές (όλες οι καταγραφές του μαζί στην ίδια γραμμή, π.χ. `7d/14d` με `+22.4%/+30.5%`, πιο πρόσφατη πρώτη). Το `#` σε κάθε breakdown μετράει καταγραφές (ledger rows), όχι μοναδικά tickers.
+
+  Το ledger χτίζεται μόνο από τη στιγμή που ενεργοποιήθηκε το logging και μετά — δεν μπορεί να ανακατασκευάσει τι προτάθηκε πριν. Και τα δύο emails είναι στα αγγλικά.
+
+Το weekly report επίσης δείχνει ένα μικρό stats banner (μέσος όρος score, κυρίαρχος τομέας), zebra striping στον πίνακα Watchlist, και χρωματιστό border στις top-5 κάρτες ανάλογα με το action tier.
 
 ---
 
@@ -90,7 +96,7 @@
 
 - **`test_ticker.py`** — έλεγχος μίας μετοχής χωρίς να τρέξει όλο το pipeline: `python test_ticker.py MSFT`. Τυπώνει breakdown ανά pillar (ίδια flags με το πραγματικό email) και αν περνάει το gate.
 - **`backtest.py`** — τρέχει το `score_stock()` πάνω σε ιστορικά σημεία τιμής για να ελέγξει αν το total score προβλέπει forward returns. Τα Technicals/Catalyst είναι σωστά point-in-time· τα fundamentals pillars χρησιμοποιούν το σημερινό snapshot του yfinance για κάθε ιστορική ημερομηνία (look-ahead bias — πιο αξιόπιστο για timing παρά για τα fundamentals pillars). Βγάζει `backtest_results.csv`.
-- **`performance_report.py`** — βλ. παραπάνω.
+- **`performance_report.py`** — στέλνει το μηνιαίο performance email (βλ. παραπάνω) και γράφει και το πλήρες `performance_report.csv` (μία γραμμή ανά καταγραφή, με `current_price`/`days_held`/`return_pct`) για drill-down σε Excel/Sheets.
 
 ---
 
@@ -100,7 +106,7 @@
 |---|---|---|
 | `weekly_screener.yml` | Κάθε Δευτέρα 07:00 (Ελλάδα) + manual | Χτίζει watchlist, τρέχει το screener, στέλνει email, commit-άρει το ledger πίσω στο repo |
 | `backtest.yml` | Μόνο manual | Χτίζει watchlist, τρέχει το `backtest.py`, ανεβάζει `backtest_results.csv` ως artifact |
-| `performance_report.yml` | 1η κάθε μήνα 07:00 (Ελλάδα) + manual | Τρέχει το `performance_report.py`, ανεβάζει `performance_report.csv` ως artifact |
+| `performance_report.yml` | 1η κάθε μήνα 07:00 (Ελλάδα) + manual | Τρέχει το `performance_report.py`, στέλνει το μηνιαίο performance email, ανεβάζει `performance_report.csv` ως artifact |
 | `debug_wikipedia.yml` | Μόνο manual | Δείχνει τη δομή (columns, table index) όλων των Wikipedia πηγών — χρήσιμο πριν προσθέσεις νέα αγορά στο `WIKI_INDICES` |
 
 Όταν τρέχεις οποιοδήποτε workflow χειροκίνητα, βεβαιώσου ότι έχεις επιλέξει το σωστό branch στο dropdown του "Run workflow" — αλλιώς θα τρέξει πάνω στο `main` ό,τι κι αν δουλεύεις σε feature branch.
