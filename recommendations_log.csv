@@ -119,3 +119,33 @@ date,ticker,name,sector,price,total_score,action
 2026-08-31,TSM,Taiwan Semiconductor Manufactur,Technology,417.52,86,BUY
 2026-08-31,MPWR,"Monolithic Power Systems, Inc.",Technology,1256.26,86,BUY
 2026-08-31,TER,"Teradyne, Inc.",Technology,354.97,86,BUY
+2026-09-07,FICO,Fair Isaac Corporation,Technology,932.26,124,STRONG BUY
+2026-09-07,000660.KS,SK hynix,Technology,1783000.0,109,STRONG BUY
+2026-09-07,402340.KS,SKSQUARE,Technology,1125000.0,108,STRONG BUY
+2026-09-07,WDC,Western Digital Corporation,Technology,467.46,107,STRONG BUY
+2026-09-07,SKHY,SK hynix Inc.,Technology,177.0,105,STRONG BUY
+2026-09-07,483650.KS,d'Alba Global,Consumer Defensive,186700.0,99,BUY
+2026-09-07,MU,"Micron Technology, Inc.",Technology,1016.59,98,BUY
+2026-09-07,NVDA,NVIDIA Corporation,Technology,230.36,97,BUY
+2026-09-07,SNDK,Sandisk Corporation,Technology,1740.0,96,BUY
+2026-09-07,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,193.29,96,BUY
+2026-09-07,NXPI,NXP Semiconductors N.V.,Technology,227.835,94,BUY
+2026-09-07,005940.KS,NHIS,Financial Services,26900.0,94,BUY
+2026-09-07,APP,Applovin Corporation,Communication Services,320.56,93,BUY
+2026-09-07,TER,"Teradyne, Inc.",Technology,357.03,93,BUY
+2026-09-07,ADI,"Analog Devices, Inc.",Technology,362.25,91,BUY
+2026-09-07,ADSK,"Autodesk, Inc.",Technology,217.9,91,BUY
+2026-09-07,MPWR,"Monolithic Power Systems, Inc.",Technology,1223.86,91,BUY
+2026-09-07,006800.KS,MIRAE ASSET SEC,Financial Services,34700.0,91,BUY
+2026-09-07,TXN,Texas Instruments Incorporated,Technology,258.44,90,BUY
+2026-09-07,039490.KS,KIWOOM,Financial Services,272500.0,90,BUY
+2026-09-07,KGC,Kinross Gold Corporation,Basic Materials,30.87,89,BUY
+2026-09-07,FORM,"FormFactor, Inc.",Technology,103.9,89,BUY
+2026-09-07,G24.DE,Scout24 SE                    N,Communication Services,75.2,89,BUY
+2026-09-07,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,18.25,88,BUY
+2026-09-07,SIMO,Silicon Motion Technology Corpo,Technology,256.21,88,BUY
+2026-09-07,SCHW,Charles Schwab Corporation (The,Financial Services,109.29,88,BUY
+2026-09-07,INCY,Incyte Corporation,Healthcare,126.75,88,BUY
+2026-09-07,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,585.0,88,BUY
+2026-09-07,UU.L,UNITED UTILITIES GROUP PLC ORD ,Utilities,1360.0,88,BUY
+2026-09-07,TAL,TAL Education Group,Consumer Defensive,12.4,87,BUY
