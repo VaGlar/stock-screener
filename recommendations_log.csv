@@ -149,3 +149,33 @@ date,ticker,name,sector,price,total_score,action
 2026-09-07,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,585.0,88,BUY
 2026-09-07,UU.L,UNITED UTILITIES GROUP PLC ORD ,Utilities,1360.0,88,BUY
 2026-09-07,TAL,TAL Education Group,Consumer Defensive,12.4,87,BUY
+2026-09-14,FICO,Fair Isaac Corporation,Technology,985.39,128,STRONG BUY
+2026-09-14,SKHY,SK hynix Inc.,Technology,190.07,114,STRONG BUY
+2026-09-14,402340.KS,SKSQUARE,Technology,1000000.0,111,STRONG BUY
+2026-09-14,000660.KS,SK hynix,Technology,1697000.0,109,STRONG BUY
+2026-09-14,WDC,Western Digital Corporation,Technology,447.18,102,STRONG BUY
+2026-09-14,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,173.92,102,STRONG BUY
+2026-09-14,483650.KS,d'Alba Global,Consumer Defensive,167600.0,102,STRONG BUY
+2026-09-14,006800.KS,MIRAE ASSET SEC,Financial Services,33150.0,101,STRONG BUY
+2026-09-14,SNDK,Sandisk Corporation,Technology,1633.35,99,BUY
+2026-09-14,MU,"Micron Technology, Inc.",Technology,975.26,98,BUY
+2026-09-14,NTAP,"NetApp, Inc.",Technology,199.28,98,BUY
+2026-09-14,BX,Blackstone Inc.,Financial Services,128.51,96,BUY
+2026-09-14,NXPI,NXP Semiconductors N.V.,Technology,236.62,96,BUY
+2026-09-14,ADSK,"Autodesk, Inc.",Technology,212.4,95,BUY
+2026-09-14,UU.L,UNITED UTILITIES GROUP PLC ORD ,Utilities,1328.0,95,BUY
+2026-09-14,278470.KS,APR,Consumer Defensive,369000.0,95,BUY
+2026-09-14,KGC,Kinross Gold Corporation,Basic Materials,29.13,94,BUY
+2026-09-14,NVDA,NVIDIA Corporation,Technology,218.29,93,BUY
+2026-09-14,APP,Applovin Corporation,Communication Services,323.96,93,BUY
+2026-09-14,G24.DE,Scout24 SE                    N,Communication Services,74.85,92,BUY
+2026-09-14,016360.KS,SamsungSecu,Financial Services,87500.0,92,BUY
+2026-09-14,SGE.L,THE SAGE GROUP PLC ORD 1 4/77P,Technology,1004.5,91,BUY
+2026-09-14,ADYEN.AS,ADYEN,Technology,936.9,91,BUY
+2026-09-14,SCHW,Charles Schwab Corporation (The,Financial Services,107.25,90,BUY
+2026-09-14,PBR,Petroleo Brasileiro S.A. Petrob,Energy,21.2,89,BUY
+2026-09-14,PATH,"UiPath, Inc.",Technology,13.75,89,BUY
+2026-09-14,EOG,"EOG Resources, Inc.",Energy,147.36,89,BUY
+2026-09-14,SDR.L,SCHRODERS PLC ORD 20P,Financial Services,586.0,88,BUY
+2026-09-14,042700.KS,HANMISemi,Technology,225000.0,88,BUY
+2026-09-14,005940.KS,NHIS,Financial Services,26400.0,88,BUY
