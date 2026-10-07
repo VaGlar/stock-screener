@@ -1,6 +1,6 @@
 """
-Test Ticker — γρήγορος έλεγχος score_stock() για μία μετοχή, χωρίς να τρέξει
-όλο το πρόγραμμα (build_watchlist / email).
+Test Ticker — quick check of score_stock() for a single stock, without running
+the whole pipeline (build_watchlist / email).
 
 Usage: python test_ticker.py MSFT
 """
@@ -24,7 +24,7 @@ def main():
     print(f"🔍 Fetching {ticker}...")
     data = get_stock_data(ticker)
     if not data:
-        print(f"❌ {ticker}: δεν βρέθηκαν δεδομένα (yfinance)")
+        print(f"❌ {ticker}: no data found (yfinance)")
         return
 
     sector_cfg, sector_key = get_sector_config(data, config)

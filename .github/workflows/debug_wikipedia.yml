@@ -1,7 +1,7 @@
 name: Debug Wikipedia Tables
 
 on:
-  workflow_dispatch:  # Μόνο χειροκίνητα
+  workflow_dispatch:  # Manual only
 
 jobs:
   debug:

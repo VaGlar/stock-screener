@@ -1,14 +1,14 @@
 """
 Backtest / Validation — v1
-Ελέγχει αν το 7-pillar total score προβλέπει forward returns, τρέχοντας το score_stock()
-πάνω σε ιστορικά σημεία τιμής αντί για live δεδομένα.
+Checks whether the 7-pillar total score predicts forward returns, by running score_stock()
+over historical price points instead of live data.
 
-ΠΕΡΙΟΡΙΣΜΟΣ: το yfinance δεν δίνει point-in-time fundamentals (margins, growth, PE...).
-Τα technicals (RSI, 200DMA, % από high) υπολογίζονται σωστά point-in-time από το ιστορικό
-των τιμών, αλλά τα fundamentals pillars (Moat/Growth/Valuation/EVA/SAM) χρησιμοποιούν το
-ΤΡΕΧΟΝ snapshot του yfinance για κάθε ημερομηνία — άρα υπάρχει look-ahead bias εκεί. Το
-backtest είναι πιο αξιόπιστο για να αξιολογήσει το πόσο καλά το Technicals/Catalyst timing
-προβλέπει βραχυπρόθεσμα forward returns, λιγότερο αξιόπιστο για τα fundamentals pillars.
+LIMITATION: yfinance does not provide point-in-time fundamentals (margins, growth, PE...).
+The technicals (RSI, 200DMA, % from high) are correctly computed point-in-time from the price
+history, but the fundamentals pillars (Moat/Growth/Valuation/EVA/SAM) use yfinance's
+CURRENT snapshot for every date — so there is look-ahead bias there. The
+backtest is more reliable for evaluating how well Technicals/Catalyst timing
+predicts short-term forward returns, less reliable for the fundamentals pillars.
 """
 
 import json
@@ -19,10 +19,10 @@ import yfinance as yf
 from screener import load_config, get_sector_config, score_stock, passes_minimums, get_action, sf
 
 LOOKBACK_YEARS = "3y"
-FORWARD_DAYS = [21, 63]      # ~1 μήνας, ~3 μήνες forward return horizons
-SAMPLE_STEP_DAYS = 5         # δειγματοληψία κάθε ~εβδομάδα (trading days) μέσα στο ιστορικό
-MAX_TICKERS = 100            # subset του watchlist για ταχύτητα σε πρώτο πέρασμα
-MIN_HISTORY_DAYS = 260       # χρειάζεται buffer >=252 μέρες πριν ξεκινήσει η δειγματοληψία
+FORWARD_DAYS = [21, 63]      # ~1 month, ~3 months forward return horizons
+SAMPLE_STEP_DAYS = 5         # sample every ~week (trading days) within the history
+MAX_TICKERS = 100            # subset of the watchlist for speed on a first pass
+MIN_HISTORY_DAYS = 260       # needs a buffer of >=252 days before sampling starts
 
 
 def load_universe():
@@ -34,7 +34,7 @@ def load_universe():
 
 
 def compute_technicals(closes, i):
-    """Technicals pillar inputs υπολογισμένα point-in-time, βλέποντας μόνο μέχρι το index i."""
+    """Technicals pillar inputs computed point-in-time, looking only up to index i."""
     window = closes.iloc[: i + 1]
     if len(window) < 30:
         return None
@@ -65,20 +65,20 @@ def fundamentals_from_info(info, insider_net_pct=None):
         "num_analysts": info.get("numberOfAnalystOpinions", 0) or 0,
         "revenue_growth": sf(info.get("revenueGrowth")),
         "earnings_growth": sf(info.get("earningsGrowth")),
-        "rev_accelerating": None,  # δεν αναπαράγεται point-in-time εδώ
+        "rev_accelerating": None,  # not reproduced point-in-time here
         "pe": sf(info.get("trailingPE")),
         "ev_ebitda": sf(info.get("enterpriseToEbitda")),
         "ev_revenue": sf(info.get("enterpriseToRevenue")),
         "peg": sf(info.get("pegRatio")),
         "fcf_yield": (fcf / mc) if (fcf and mc and mc > 0) else None,
-        "roic": None,  # δεν αναπαράγεται point-in-time εδώ — πέφτει στο fallback proxy
+        "roic": None,  # not reproduced point-in-time here — falls to the fallback proxy
         "roic_wacc_spread": None,
         "roic_trend_improving": None,
         "market_cap": mc,
         "industry": info.get("industry", "N/A"),
         "sector": info.get("sector", "N/A"),
         "target_price": sf(info.get("targetMeanPrice")),
-        "insider_net_pct": insider_net_pct,  # snapshot τρέχουσας στιγμής, ίδιος περιορισμός με τα υπόλοιπα fundamentals
+        "insider_net_pct": insider_net_pct,  # current-moment snapshot, same limitation as the other fundamentals
     }
 
 
@@ -106,7 +106,7 @@ def get_insider_net_pct(stock):
 def run_backtest():
     config = load_config()
     tickers = load_universe()
-    print(f"🔍 Backtest σε {len(tickers)} tickers, ιστορικό {LOOKBACK_YEARS}, horizons {FORWARD_DAYS}d")
+    print(f"🔍 Backtest on {len(tickers)} tickers, history {LOOKBACK_YEARS}, horizons {FORWARD_DAYS}d")
 
     rows = []
     for ti, ticker in enumerate(tickers, 1):
@@ -159,12 +159,12 @@ def run_backtest():
             continue
 
     if not rows:
-        print("❌ Δεν παράχθηκαν δεδομένα backtest.")
+        print("❌ No backtest data was produced.")
         return
 
     df = pd.DataFrame(rows)
     df.to_csv("backtest_results.csv", index=False)
-    print(f"\n✅ {len(df)} observations saved σε backtest_results.csv")
+    print(f"\n✅ {len(df)} observations saved to backtest_results.csv")
 
     summarize(df)
 
@@ -174,7 +174,7 @@ def summarize(df):
     labels = ["<40 (excluded)", "40-64 (PASS)", "65-79 (WATCH)", "80-99 (BUY)", "100+ (STRONG BUY)"]
     df["score_bucket"] = pd.cut(df["total_score"], bins=bins, labels=labels)
 
-    print("\n📊 Forward returns ανά score bucket:")
+    print("\n📊 Forward returns by score bucket:")
     for d in FORWARD_DAYS:
         col = f"fwd_ret_{d}d"
         g = df.groupby("score_bucket", observed=True)[col]
@@ -191,7 +191,7 @@ def summarize(df):
             "hit_rate": "{:.1%}".format,
         }))
 
-    print(f"\n📈 Gate stats: {df['passes_gate'].mean():.1%} περνάνε το core-quality gate")
+    print(f"\n📈 Gate stats: {df['passes_gate'].mean():.1%} pass the core-quality gate")
 
 
 if __name__ == "__main__":
