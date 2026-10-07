@@ -1,6 +1,6 @@
 """
 Weekly Stock Screener — v3
-7-Pillar scoring framework με sector-aware benchmarks
+7-Pillar scoring framework with sector-aware benchmarks
 """
 
 import yfinance as yf
@@ -26,7 +26,7 @@ RECOMMENDATIONS_LOG = "recommendations_log.csv"
 # ── Safe float helper ─────────────────────────────────────────────
 
 def sf(val):
-    """Safe float conversion — αποφεύγει TypeError από string values"""
+    """Safe float conversion — avoids TypeError from string values"""
     try:
         return float(val) if val is not None else None
     except (ValueError, TypeError):
@@ -86,7 +86,7 @@ def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
         if not current_price:
             return None
 
-        # Αν λείπουν fundamentals → retry
+        # If fundamentals are missing → retry
         gm = sf(info.get("grossMargins"))
         om = sf(info.get("operatingMargins"))
         pe = sf(info.get("trailingPE"))
@@ -148,7 +148,7 @@ def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
             roic_current = None
             roic_trend_improving = None
 
-        # Insider buying — καθαρό % μετοχών που αγοράστηκαν (θετικό) ή πουλήθηκαν (αρνητικό) τους τελευταίους 6 μήνες
+        # Insider buying — net % of shares bought (positive) or sold (negative) over the last 6 months
         try:
             insider_df = stock.insider_purchases
             insider_net_pct = None
@@ -162,7 +162,7 @@ def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
                             val = val.strip().rstrip("%")
                         insider_net_pct = sf(val)
                         if insider_net_pct is not None and abs(insider_net_pct) > 1:
-                            insider_net_pct /= 100  # ήταν ήδη σε ποσοστιαίες μονάδες (π.χ. "12.3") αντί για κλάσμα
+                            insider_net_pct /= 100  # was already in percentage units (e.g. "12.3") instead of a fraction
                         break
         except Exception:
             insider_net_pct = None
@@ -241,7 +241,7 @@ def score_stock(data, sector_cfg):
         elif om >= 0.10: s += 5; f.append(f"🟡 Op margin {om:.0%}")
         elif om > 0: s += 2; f.append(f"🔴 Op margin {om:.0%}")
     if gm is None and om is None:
-        # Fallback proxy — max 20/30 (δεν φτάνει "εξαιρετικό")
+        # Fallback proxy — max 20/30 (never reaches "excellent")
         rec = data.get("recommendation", "")
         na = data.get("num_analysts") or 0
         if rec == "strongBuy" and na >= 10: s += 15; f.append("🟡 Margins N/A — strong consensus proxy")
@@ -288,7 +288,7 @@ def score_stock(data, sector_cfg):
         if pe <= val_cfg.get("pe_cheap", 20): s += 7; f.append(f"💰 P/E {pe:.1f}x (cheap)")
         elif pe <= val_cfg.get("pe_fair", 30): s += 4; f.append(f"🟡 P/E {pe:.1f}x (fair)")
         else: f.append(f"🔴 P/E {pe:.1f}x")
-    # Sectors που ορίζουν ev_revenue thresholds τιμολογούνται σε EV/Revenue (π.χ. SaaS) — αλλιώς EV/EBITDA
+    # Sectors that define ev_revenue thresholds are priced on EV/Revenue (e.g. SaaS) — otherwise EV/EBITDA
     uses_ev_revenue = "ev_revenue_cheap" in val_cfg
     if uses_ev_revenue:
         if ev_rev and isinstance(ev_rev, (int, float)) and ev_rev > 0:
@@ -337,19 +337,19 @@ def score_stock(data, sector_cfg):
     if data.get("roic_trend_improving"): s += 3; f.append("📈 ROIC improving")
     scores["eva"], flags["eva"] = min(s, 20), f
 
-    # 5. TECHNICALS /15 — bidirectional: αμείβει είτε deep-value reversal setup είτε confirmed uptrend/momentum
+    # 5. TECHNICALS /15 — bidirectional: rewards either a deep-value reversal setup or confirmed uptrend/momentum
     tech_cfg = sector_cfg.get("technicals", {})
     s, f = 0, []
     pct_high = data.get("pct_from_high")
     if pct_high and isinstance(pct_high, (int, float)):
         if pct_high <= tech_cfg.get("from_52w_high_deep_value", -0.50): s += 6; f.append(f"📉 -{abs(pct_high):.0%} (deep value)")
-        elif pct_high <= tech_cfg.get("from_52w_high_opportunity", -0.30): s += 4; f.append(f"📉 -{abs(pct_high):.0%} από high")
-        elif pct_high >= -0.05: s += 4; f.append(f"🚀 Κοντά/σε new high (momentum)")
+        elif pct_high <= tech_cfg.get("from_52w_high_opportunity", -0.30): s += 4; f.append(f"📉 -{abs(pct_high):.0%} from high")
+        elif pct_high >= -0.05: s += 4; f.append(f"🚀 Near/at new high (momentum)")
     pct_dma = data.get("pct_vs_200dma")
     if pct_dma is not None and isinstance(pct_dma, (int, float)):
-        if -0.05 <= pct_dma <= 0.10: s += 4; f.append(f"✅ Κοντά στο 200DMA ({pct_dma:+.1%})")
-        elif pct_dma > 0.10: s += 3; f.append(f"📈 Σταθερό uptrend πάνω από 200DMA ({pct_dma:+.1%})")
-        else: s += 1; f.append(f"⚠️ Κάτω από 200DMA ({pct_dma:+.1%})")
+        if -0.05 <= pct_dma <= 0.10: s += 4; f.append(f"✅ Close to 200DMA ({pct_dma:+.1%})")
+        elif pct_dma > 0.10: s += 3; f.append(f"📈 Steady uptrend above 200DMA ({pct_dma:+.1%})")
+        else: s += 1; f.append(f"⚠️ Below 200DMA ({pct_dma:+.1%})")
     rsi = data.get("rsi")
     if rsi and isinstance(rsi, (int, float)):
         if rsi <= 30: s += 5; f.append(f"🟢 RSI {rsi:.0f} (oversold)")
@@ -363,7 +363,7 @@ def score_stock(data, sector_cfg):
     mc = data.get("market_cap") or 0
     rg = data.get("revenue_growth") or 0
     if isinstance(mc, (int, float)):
-        if mc < 2e9: s += 5; f.append("🌍 Small cap — μεγάλο TAM headroom")
+        if mc < 2e9: s += 5; f.append("🌍 Small cap — large TAM headroom")
         elif mc < 10e9: s += 3; f.append("🌍 Mid cap — TAM runway")
     industry = data.get("industry", "")
     if any(x in industry for x in ["Software", "Semiconductor", "Biotech", "Internet"]): s += 5; f.append("🌍 High-growth industry")
@@ -405,9 +405,9 @@ def score_stock(data, sector_cfg):
 
 
 # ── Minimums ──────────────────────────────────────────────────────
-# Μόνο τα core-quality pillars (moat/growth/eva) είναι hard gate. Valuation/technicals/sam/catalyst
-# επηρεάζουν το total score αλλά δεν αποκλείουν πλέον μόνα τους — αλλιώς μια ακριβή, momentum
-# quality-μετοχή (π.χ. κοντά σε 52w high) αποκλειόταν ανεξάρτητα από το πόσο υψηλό ήταν το total score.
+# Only the core-quality pillars (moat/growth/eva) are a hard gate. Valuation/technicals/sam/catalyst
+# affect the total score but no longer exclude on their own — otherwise an expensive, momentum
+# quality stock (e.g. near a 52w high) would be excluded regardless of how high the total score was.
 PILLAR_MINIMUMS_WATCH = {
     "moat": 8, "growth": 5, "eva": 3
 }
@@ -441,8 +441,8 @@ def format_market_cap(mc):
 
 
 # ── Recommendations Log ──────────────────────────────────────────────
-# Καταγράφει ό,τι πραγματικά στέλνεται στο email, ώστε αργότερα να μπορούμε
-# να μετρήσουμε την πραγματική απόδοση των προτάσεων (βλ. performance_report.py)
+# Logs what is actually sent in the email, so that later we can
+# measure the real performance of the recommendations (see performance_report.py)
 
 def log_recommendations(results_reported):
     date_str = datetime.now().strftime("%Y-%m-%d")
@@ -456,11 +456,11 @@ def log_recommendations(results_reported):
             thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
             action = get_action(r["total_score"], thresholds)[0]
             writer.writerow([date_str, d["ticker"], d["name"], d["sector"], d["price"], r["total_score"], action])
-    print(f"📝 {len(results_reported)} προτάσεις καταγράφηκαν στο {RECOMMENDATIONS_LOG}")
+    print(f"📝 {len(results_reported)} recommendations logged to {RECOMMENDATIONS_LOG}")
 
 
 def load_recommendation_history():
-    """ticker -> λίστα προηγούμενων γραμμών του ledger (χρονολογική σειρά), για badges στο report"""
+    """ticker -> list of previous ledger rows (chronological order), for badges in the report"""
     if not os.path.exists(RECOMMENDATIONS_LOG):
         return {}
     history = {}
@@ -675,7 +675,7 @@ def main():
     try:
         with open("watchlist.json", "r") as f:
             watchlist_data = json.load(f)
-        # Νέο format: tickers είναι απλή λίστα strings
+        # New format: tickers is a plain list of strings
         raw = watchlist_data["tickers"]
         if raw and isinstance(raw[0], dict):
             tickers = [t["symbol"] for t in raw[:MAX_TICKERS]]
@@ -714,13 +714,13 @@ def main():
 
     print(f"\n✅ {len(results)} stocks passed filters")
     results_reported = sorted(results, key=lambda x: x["total_score"], reverse=True)[:MAX_REPORT]
-    history = load_recommendation_history()  # πριν το log_recommendations, αλλιώς θα δει τη σημερινή γραμμή ως "παρελθόν"
+    history = load_recommendation_history()  # before log_recommendations, otherwise it would see today's row as "past"
 
     performance_html = ""
     ledger_rows = [row for rows in history.values() for row in rows]
     if ledger_rows:
         from performance_report import get_current_prices, compute_report_rows, render_html_summary
-        print(f"\n📈 Υπολογισμός πραγματικής απόδοσης {len(ledger_rows)} προηγούμενων προτάσεων...")
+        print(f"\n📈 Computing real performance of {len(ledger_rows)} previous recommendations...")
         perf_tickers = sorted({row["ticker"] for row in ledger_rows})
         current_prices = get_current_prices(perf_tickers)
         performance_html = render_html_summary(compute_report_rows(ledger_rows, current_prices))

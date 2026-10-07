@@ -2,12 +2,12 @@ name: Performance Report
 
 on:
   schedule:
-    # 1η κάθε μήνα, 07:00 ώρα Ελλάδας (04:00 UTC)
+    # 1st of every month, 07:00 Greece time (04:00 UTC)
     - cron: "0 4 1 * *"
   workflow_dispatch:
 
 env:
-  PYTHONUNBUFFERED: "1"  # χωρίς αυτό, το stdout είναι block-buffered και τα logs εμφανίζονται εκτός σειράς
+  PYTHONUNBUFFERED: "1"  # without this, stdout is block-buffered and logs appear out of order
 
 jobs:
   run-report:

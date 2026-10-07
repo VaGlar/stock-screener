@@ -1,8 +1,8 @@
 {
-  "_readme": "Sector scoring config. Το screener αντιστοιχίζει αυτόματα κάθε μετοχή στον κλάδο της μέσω Yahoo Finance sector/industry. Άλλαξε τις τιμές εδώ και το screener θα τις διαβάσει αυτόματα.",
+  "_readme": "Sector scoring config. The screener automatically maps each stock to its sector via Yahoo Finance sector/industry. Change the values here and the screener will read them automatically.",
 
   "industry_mapping": {
-    "_readme": "Mapping από Yahoo Finance industry → config sector. Το screener διαβάζει το industry field και το αντιστοιχίζει.",
+    "_readme": "Mapping from Yahoo Finance industry → config sector. The screener reads the industry field and maps it.",
     "Software—Application": "saas_cloud",
     "Software—Infrastructure": "saas_cloud",
     "Information Technology Services": "saas_cloud",
@@ -30,7 +30,7 @@
   },
 
   "sector_mapping": {
-    "_readme": "Fallback mapping από Yahoo Finance sector → config sector. Χρησιμοποιείται αν το industry δεν βρεθεί στο industry_mapping.",
+    "_readme": "Fallback mapping from Yahoo Finance sector → config sector. Used if the industry isn't found in industry_mapping.",
     "Technology": "saas_cloud",
     "Healthcare": "healthcare_biotech",
     "Energy": "energy",
@@ -52,13 +52,13 @@
         "gross_margin_strong": 0.7,
         "gross_margin_ok": 0.55,
         "gross_margin_weak": 0.4,
-        "note": "Υψηλά margins λόγω switching costs και data lock-in"
+        "note": "High margins due to switching costs and data lock-in"
       },
       "growth": {
         "revenue_growth_strong": 0.25,
         "revenue_growth_ok": 0.15,
         "revenue_growth_weak": 0.08,
-        "note": "Περιμένουμε >25% για strong score"
+        "note": "We expect >25% for a strong score"
       },
       "valuation": {
         "pe_cheap": 40,
@@ -67,13 +67,13 @@
         "ev_revenue_cheap": 8,
         "ev_revenue_fair": 15,
         "ev_revenue_expensive": 25,
-        "note": "Τιμολογείται σε EV/Revenue — P/E λιγότερο σχετικό"
+        "note": "Priced on EV/Revenue — P/E less relevant"
       },
       "eva": {
         "roic_strong": 0.20,
         "roic_ok": 0.10,
         "roic_weak": 0.00,
-        "note": "Πολλές είναι ακόμα ζημιογόνες — Rule of 40 πιο σχετικό"
+        "note": "Many are still loss-making — Rule of 40 more relevant"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.30,
@@ -98,7 +98,7 @@
         "revenue_growth_strong": 0.20,
         "revenue_growth_ok": 0.10,
         "revenue_growth_weak": 0.03,
-        "note": "Κυκλικός κλάδος — σημαντικό το cycle timing"
+        "note": "Cyclical sector — cycle timing matters a lot"
       },
       "valuation": {
         "pe_cheap": 20,
@@ -107,13 +107,13 @@
         "ev_ebitda_cheap": 15,
         "ev_ebitda_fair": 25,
         "ev_ebitda_expensive": 40,
-        "note": "Προσοχή στο cycle position"
+        "note": "Watch out for cycle position"
       },
       "eva": {
         "roic_strong": 0.25,
         "roic_ok": 0.15,
         "roic_weak": 0.08,
-        "note": "Capex-intensive — ROIC πάνω από WACC (~8%) κλειδί"
+        "note": "Capex-intensive — ROIC above WACC (~8%) is key"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.25,
@@ -132,13 +132,13 @@
         "gross_margin_strong": 0.5,
         "gross_margin_ok": 0.4,
         "gross_margin_weak": 0.3,
-        "note": "Brand loyalty και distribution network"
+        "note": "Brand loyalty and distribution network"
       },
       "growth": {
         "revenue_growth_strong": 0.15,
         "revenue_growth_ok": 0.08,
         "revenue_growth_weak": 0.03,
-        "note": "15%+ είναι εξαιρετικό για consumer"
+        "note": "15%+ is excellent for consumer"
       },
       "valuation": {
         "pe_cheap": 20,
@@ -147,13 +147,13 @@
         "ev_ebitda_cheap": 12,
         "ev_ebitda_fair": 20,
         "ev_ebitda_expensive": 30,
-        "note": "Παραδοσιακά P/E και EV/EBITDA"
+        "note": "Traditional P/E and EV/EBITDA"
       },
       "eva": {
         "roic_strong": 0.20,
         "roic_ok": 0.12,
         "roic_weak": 0.06,
-        "note": "Asset-light models έχουν υψηλότερο ROIC"
+        "note": "Asset-light models have higher ROIC"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.25,
@@ -172,13 +172,13 @@
         "gross_margin_strong": 0.7,
         "gross_margin_ok": 0.55,
         "gross_margin_weak": 0.4,
-        "note": "Patents και FDA approval barriers"
+        "note": "Patents and FDA approval barriers"
       },
       "growth": {
         "revenue_growth_strong": 0.20,
         "revenue_growth_ok": 0.10,
         "revenue_growth_weak": 0.05,
-        "note": "Pipeline depth πιο σημαντικό από current growth"
+        "note": "Pipeline depth matters more than current growth"
       },
       "valuation": {
         "pe_cheap": 15,
@@ -187,13 +187,13 @@
         "ev_ebitda_cheap": 10,
         "ev_ebitda_fair": 18,
         "ev_ebitda_expensive": 30,
-        "note": "Biotech συχνά αξιολογείται σε pipeline value"
+        "note": "Biotech is often valued on pipeline value"
       },
       "eva": {
         "roic_strong": 0.20,
         "roic_ok": 0.12,
         "roic_weak": 0.05,
-        "note": "R&D intensity μειώνει βραχυπρόθεσμα ROIC"
+        "note": "R&D intensity reduces ROIC in the short term"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.25,
@@ -212,13 +212,13 @@
         "gross_margin_strong": 0.4,
         "gross_margin_ok": 0.3,
         "gross_margin_weak": 0.2,
-        "note": "Commodity business — χαμηλό moat, price-taker"
+        "note": "Commodity business — low moat, price-taker"
       },
       "growth": {
         "revenue_growth_strong": 0.10,
         "revenue_growth_ok": 0.05,
         "revenue_growth_weak": 0.00,
-        "note": "FCF yield πιο σημαντικό από revenue growth"
+        "note": "FCF yield matters more than revenue growth"
       },
       "valuation": {
         "pe_cheap": 10,
@@ -227,13 +227,13 @@
         "ev_ebitda_cheap": 4,
         "ev_ebitda_fair": 7,
         "ev_ebitda_expensive": 10,
-        "note": "Χαμηλά multiples — focus σε FCF yield και dividend"
+        "note": "Low multiples — focus on FCF yield and dividend"
       },
       "eva": {
         "roic_strong": 0.15,
         "roic_ok": 0.08,
         "roic_weak": 0.04,
-        "note": "ROIC πάνω από cost of capital (~7%) αρκεί"
+        "note": "ROIC above cost of capital (~7%) is enough"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.20,
@@ -258,7 +258,7 @@
         "revenue_growth_strong": 0.15,
         "revenue_growth_ok": 0.08,
         "revenue_growth_weak": 0.05,
-        "note": "Για το μέγεθός τους, 10%+ είναι εντυπωσιακό"
+        "note": "For their size, 10%+ is impressive"
       },
       "valuation": {
         "pe_cheap": 20,
@@ -267,13 +267,13 @@
         "ev_ebitda_cheap": 15,
         "ev_ebitda_fair": 22,
         "ev_ebitda_expensive": 30,
-        "note": "Premium justified από moat"
+        "note": "Premium justified by moat"
       },
       "eva": {
         "roic_strong": 0.30,
         "roic_ok": 0.20,
         "roic_weak": 0.12,
-        "note": "Mega caps έχουν συνήθως εξαιρετικό ROIC"
+        "note": "Mega caps usually have excellent ROIC"
       },
       "technicals": {
         "from_52w_high_opportunity": -0.20,
@@ -287,7 +287,7 @@
     },
 
     "default": {
-      "_label": "Γενικό",
+      "_label": "General",
       "moat": {
         "gross_margin_strong": 0.5,
         "gross_margin_ok": 0.35,

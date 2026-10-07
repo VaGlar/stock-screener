@@ -1,7 +1,7 @@
 """
 Dynamic Watchlist Builder — v5
-Clean rebuild με pandas για Wikipedia parsing
-Output: watchlist.json με μόνο λίστα symbols
+Clean rebuild using pandas for Wikipedia parsing
+Output: watchlist.json with just a list of symbols
 """
 
 import json
@@ -27,10 +27,10 @@ except ImportError:
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
 
-# ── Source 1: S&P 500 από GitHub ──────────────────────────────────
+# ── Source 1: S&P 500 from GitHub ──────────────────────────────────
 
 def get_sp500():
-    print("\n📡 S&P 500 από GitHub...")
+    print("\n📡 S&P 500 from GitHub...")
     try:
         url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
         req = urllib.request.Request(url, headers=HEADERS)
@@ -51,7 +51,7 @@ def get_sp500():
         return [], {}
 
 
-# ── Source 2: Wikipedia indices με pandas ─────────────────────────
+# ── Source 2: Wikipedia indices via pandas ─────────────────────────
 
 WIKI_INDICES = {
     "FTSE 100 🇬🇧": {
@@ -60,7 +60,7 @@ WIKI_INDICES = {
         "name_col": "Company",
         "suffix": ".L",
         "table_idx": 6,
-        "has_suffix": False,  # Tickers χωρίς suffix — θα προσθέσουμε .L
+        "has_suffix": False,  # Tickers have no suffix — we'll add .L
     },
     "DAX 🇩🇪": {
         "url": "https://en.wikipedia.org/wiki/DAX",
@@ -68,7 +68,7 @@ WIKI_INDICES = {
         "name_col": "Company",
         "suffix": "",
         "table_idx": 4,
-        "has_suffix": True,  # Tickers ήδη έχουν .DE
+        "has_suffix": True,  # Tickers already have .DE
     },
     "CAC 40 🇫🇷": {
         "url": "https://en.wikipedia.org/wiki/CAC_40",
@@ -76,7 +76,7 @@ WIKI_INDICES = {
         "name_col": "Company",
         "suffix": "",
         "table_idx": 4,
-        "has_suffix": True,  # Tickers ήδη έχουν .PA (π.χ. "AC.PA") — has_suffix:False έσπαγε το suffix σε "ACPA.PA"
+        "has_suffix": True,  # Tickers already have .PA (e.g. "AC.PA") — has_suffix:False was breaking the suffix into "ACPA.PA"
     },
     "Eurostoxx 50 🇪🇺": {
         "url": "https://en.wikipedia.org/wiki/Euro_Stoxx_50",
@@ -84,7 +84,7 @@ WIKI_INDICES = {
         "name_col": "Name",
         "suffix": "",
         "table_idx": 3,
-        "has_suffix": True,  # Tickers ήδη έχουν .DE, .FR κλπ
+        "has_suffix": True,  # Tickers already have .DE, .FR etc
     },
     "BSE Sensex 🇮🇳": {
         "url": "https://en.wikipedia.org/wiki/BSE_SENSEX",
@@ -92,7 +92,7 @@ WIKI_INDICES = {
         "name_col": "Company",
         "suffix": "",
         "table_idx": 2,
-        "has_suffix": True,  # Tickers ήδη έχουν .BO
+        "has_suffix": True,  # Tickers already have .BO
     },
     "KOSPI 200 🇰🇷": {
         "url": "https://en.wikipedia.org/wiki/KOSPI_200",
@@ -100,7 +100,7 @@ WIKI_INDICES = {
         "name_col": "Company",
         "suffix": ".KS",
         "table_idx": 2,
-        "has_suffix": False,  # Tickers είναι 6-ψήφιοι αριθμητικοί κωδικοί (π.χ. 005930) — θα προσθέσουμε .KS
+        "has_suffix": False,  # Tickers are 6-digit numeric codes (e.g. 005930) — we'll add .KS
     },
 }
 
@@ -125,7 +125,7 @@ def get_wikipedia_tickers():
             tickers = []
             names = {}
 
-            # Δοκίμασε πρώτα το configured table_idx, μετά όλα τα tables
+            # Try the configured table_idx first, then all tables
             indices_to_try = [cfg["table_idx"]] + [i for i in range(len(tables)) if i != cfg["table_idx"]]
 
             for idx in indices_to_try:
@@ -133,7 +133,7 @@ def get_wikipedia_tickers():
                     continue
                 table = tables[idx]
 
-                # Ψάξε τη στήλη ticker (και προαιρετικά τη στήλη ονόματος, ίδια γραμμή)
+                # Look for the ticker column (and optionally the name column, same row)
                 col_found = None
                 for col in table.columns:
                     if str(col).strip() == cfg["col"]:
@@ -155,17 +155,17 @@ def get_wikipedia_tickers():
                     raw_val = row[col_found]
                     if pd.isna(raw_val):
                         continue
-                    t = str(raw_val).strip().split()[0]  # Πρώτη λέξη μόνο
+                    t = str(raw_val).strip().split()[0]  # First word only
 
                     if cfg.get("has_suffix"):
-                        # Ticker ήδη έχει suffix (π.χ. ADS.DE, ADANIPORTS.BO, 7203.T)
-                        # Κράτα ως έχει αν έχει valid format — επιτρέπει και αριθμητικούς κωδικούς (Ιαπωνία, Ταϊβάν, Κορέα)
+                        # Ticker already has a suffix (e.g. ADS.DE, ADANIPORTS.BO, 7203.T)
+                        # Keep as-is if it has a valid format — also allows numeric codes (Japan, Taiwan, Korea)
                         if not re.match(r'^[A-Z0-9]{1,10}(\.[A-Z]{1,3})?$', t):
                             continue
                         final_ticker = t
                     else:
-                        # Ticker χωρίς suffix — πρόσθεσε το suffix
-                        # Επιτρέπει και αριθμητικούς κωδικούς (π.χ. 7203 Toyota, 2330 TSMC, 005930 Samsung)
+                        # Ticker without a suffix — add the suffix
+                        # Also allows numeric codes (e.g. 7203 Toyota, 2330 TSMC, 005930 Samsung)
                         t_clean = re.sub(r'[^A-Z0-9]', '', t.upper())
                         if not re.match(r'^[A-Z0-9]{2,6}$', t_clean):
                             continue
@@ -187,7 +187,7 @@ def get_wikipedia_tickers():
                 ticker_names.update(names)
                 success_count += 1
             else:
-                print(f"  ⚠️ {name}: δεν βρέθηκε στήλη '{cfg['col']}'")
+                print(f"  ⚠️ {name}: column '{cfg['col']}' not found")
 
             time.sleep(1)
 
@@ -195,7 +195,7 @@ def get_wikipedia_tickers():
             print(f"  ❌ {name}: {e}")
 
     all_tickers = list(dict.fromkeys(all_tickers))
-    print(f"  → Σύνολο non-US: {len(all_tickers)} tickers από {success_count} indices")
+    print(f"  → Total non-US: {len(all_tickers)} tickers from {success_count} indices")
     return all_tickers, ticker_names
 
 
@@ -230,7 +230,7 @@ def get_yahoo_screens():
         except Exception as e:
             print(f"  ⚠️ {screen}: {e}")
 
-    print(f"  → Σύνολο Yahoo: {len(all_tickers)} tickers")
+    print(f"  → Total Yahoo: {len(all_tickers)} tickers")
     return all_tickers
 
 
@@ -254,17 +254,17 @@ def build_watchlist():
     print("=" * 60)
 
     if not sp500 and not wiki and not yahoo:
-        print("❌ CRITICAL: Όλες οι πηγές απέτυχαν!")
+        print("❌ CRITICAL: All sources failed!")
         return None
 
-    # Merge — Yahoo πρώτα (momentum), S&P 500 δεύτερο, non-US τελευταίο
+    # Merge — Yahoo first (momentum), S&P 500 second, non-US last
     all_tickers = list(dict.fromkeys(yahoo + sp500 + wiki))
 
-    print(f"\n📋 Σύνολο unique tickers: {len(all_tickers)}")
+    print(f"\n📋 Total unique tickers: {len(all_tickers)}")
     print(f"   US (S&P500 + Yahoo): ~{len(list(dict.fromkeys(yahoo + sp500)))}")
     print(f"   Non-US (Wikipedia): ~{len(wiki)}")
 
-    # Αποθήκευση — μόνο symbols, τίποτα άλλο
+    # Save — just symbols, nothing else
     watchlist = {
         "generated_at": datetime.now().isoformat(),
         "total_tickers": len(all_tickers),
@@ -273,8 +273,8 @@ def build_watchlist():
             "wikipedia": len(wiki),
             "yahoo": len(yahoo),
         },
-        "tickers": all_tickers,  # Απλή λίστα από strings
-        "names": ticker_names,  # ticker -> company name, fallback όταν λείπει το yfinance shortName/longName
+        "tickers": all_tickers,  # Plain list of strings
+        "names": ticker_names,  # ticker -> company name, fallback for when yfinance's shortName/longName is missing
     }
 
     with open("watchlist.json", "w") as f:

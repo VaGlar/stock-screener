@@ -1,7 +1,7 @@
 """
 Performance Report — v1
-Διαβάζει το recommendations_log.csv (πραγματικές προτάσεις που στάλθηκαν με email)
-και υπολογίζει την πραγματική απόδοση κάθε πρότασης μέχρι σήμερα, βάσει τρέχουσας τιμής.
+Reads recommendations_log.csv (the actual recommendations sent by email)
+and computes each recommendation's real performance to date, based on current price.
 """
 
 import csv
@@ -64,7 +64,7 @@ def compute_report_rows(rows, current_prices):
 
 
 def _breakdown_table(groups, order):
-    """groups: {label: [rows]}, order: ποια σειρά/ποια labels να εμφανιστούν αν υπάρχουν"""
+    """groups: {label: [rows]}, order: which order/which labels to show if present"""
     rows_html = ""
     for label in order:
         sub = groups.get(label)
@@ -91,9 +91,9 @@ def _breakdown_table(groups, order):
 
 
 def _stock_row_multi(ticker, rows):
-    """rows: όλες οι καταγραφές αυτού του ticker, ταξινομημένες πιο πρόσφατη πρώτα.
-    Δείχνει days_held/return ανά καταγραφή στην ίδια γραμμή (π.χ. 7d/14d, +22.4%/+30.5%)
-    αντί να διαλέγει μόνο μία και να πετάει τις υπόλοιπες."""
+    """rows: all entries for this ticker, sorted most recent first.
+    Shows days_held/return per entry on the same line (e.g. 7d/14d, +22.4%/+30.5%)
+    instead of picking just one and discarding the rest."""
     action = rows[0]["action"]
     days_str = "/".join(f"{r['days_held']}d" for r in rows)
     ret_str = "/".join(
@@ -109,10 +109,10 @@ def _stock_row_multi(ticker, rows):
 
 
 def render_html_summary(report_rows, top_n=5):
-    """Συμπαγές HTML section για ενσωμάτωση στο κάτω μέρος του weekly report (ή, με
-    μεγαλύτερο top_n, το πλήρες μηνιαίο performance report).
-    # = πλήθος καταγραφών (ledger rows) στην ομάδα, όχι μοναδικά tickers — μια μετοχή
-    που προτάθηκε πολλές φορές μετράει μία φορά ανά πρόταση."""
+    """Compact HTML section for embedding at the bottom of the weekly report (or, with
+    a larger top_n, the full monthly performance report).
+    # = number of entries (ledger rows) in the group, not unique tickers — a stock
+    recommended multiple times counts once per recommendation."""
     valid = [r for r in report_rows if r.get("return_pct") is not None]
     if not valid:
         return ""
@@ -134,18 +134,18 @@ def render_html_summary(report_rows, top_n=5):
     by_sector = {}
     for r in valid:
         by_sector.setdefault(r.get("sector") or "N/A", []).append(r)
-    sector_order = sorted(by_sector, key=lambda s: len(by_sector[s]), reverse=True)  # πιο συχνός τομέας πρώτος
+    sector_order = sorted(by_sector, key=lambda s: len(by_sector[s]), reverse=True)  # most common sector first
     sector_table = _breakdown_table(by_sector, sector_order)
 
-    # Winners/laggards μόνο από STRONG BUY/BUY — αυτά που θα αγόραζες πραγματικά, όχι WATCH/PASS
+    # Winners/laggards from STRONG BUY/BUY only — what you'd actually buy, not WATCH/PASS
     actionable = [r for r in valid if r["action"] in ("STRONG BUY", "BUY")]
-    # Μία γραμμή ανά ticker, με ΟΛΕΣ τις καταγραφές του (πιο πρόσφατη πρώτη) — δεν πετάμε
-    # καμία πρόταση, απλά τις δείχνουμε μαζί στην ίδια γραμμή αντί να διπλασιάζεται το ticker
+    # One row per ticker, with ALL of its entries (most recent first) — we don't drop
+    # any recommendation, we just show them together on the same line instead of duplicating the ticker
     by_ticker = {}
     for r in actionable:
         by_ticker.setdefault(r["ticker"], []).append(r)
     for t in by_ticker:
-        by_ticker[t].sort(key=lambda r: r["days_held"])  # πιο πρόσφατη (λιγότερες μέρες) πρώτη
+        by_ticker[t].sort(key=lambda r: r["days_held"])  # most recent (fewest days) first
 
     ticker_items = list(by_ticker.items())
     winner_tickers = sorted(ticker_items, key=lambda kv: max(r["return_pct"] for r in kv[1]), reverse=True)[:top_n]
@@ -211,22 +211,22 @@ def send_email(html):
 def summarize(rows):
     valid = [r for r in rows if r["return_pct"] is not None]
     if not valid:
-        print("⚠️ Δεν υπάρχουν έγκυρες αποδόσεις για υπολογισμό.")
+        print("⚠️ No valid returns to compute.")
         return
 
     avg_ret = sum(r["return_pct"] for r in valid) / len(valid)
     hit_rate = sum(1 for r in valid if r["return_pct"] > 0) / len(valid)
-    print(f"\n📊 Συνολική απόδοση ({len(valid)} προτάσεις με valid data):")
-    print(f"  Μέση απόδοση: {avg_ret:+.1%}   Hit rate: {hit_rate:.1%}")
+    print(f"\n📊 Overall performance ({len(valid)} recommendations with valid data):")
+    print(f"  Avg return: {avg_ret:+.1%}   Hit rate: {hit_rate:.1%}")
 
-    print("\n📊 Ανά action label:")
+    print("\n📊 By action label:")
     for action in sorted({r["action"] for r in valid}):
         sub = [r for r in valid if r["action"] == action]
         avg = sum(r["return_pct"] for r in sub) / len(sub)
         hr = sum(1 for r in sub if r["return_pct"] > 0) / len(sub)
         print(f"  {action:12s} n={len(sub):3d}  avg={avg:+.1%}  hit_rate={hr:.1%}")
 
-    print("\n📊 Ανά holding period:")
+    print("\n📊 By holding period:")
     buckets = {}
     for r in valid:
         b = bucket_days(r["days_held"])
@@ -243,11 +243,11 @@ def summarize(rows):
 def main():
     rows = load_log()
     if not rows:
-        print("❌ recommendations_log.csv δεν βρέθηκε ή είναι άδειο — δεν υπάρχει ακόμα ιστορικό προτάσεων.")
+        print("❌ recommendations_log.csv not found or empty — no recommendation history yet.")
         return
 
     tickers = sorted({r["ticker"] for r in rows})
-    print(f"🔍 Υπολογισμός απόδοσης για {len(rows)} προτάσεις, {len(tickers)} unique tickers...")
+    print(f"🔍 Computing performance for {len(rows)} recommendations, {len(tickers)} unique tickers...")
     current_prices = get_current_prices(tickers)
 
     report_rows = compute_report_rows(rows, current_prices)
@@ -256,7 +256,7 @@ def main():
         writer = csv.DictWriter(f, fieldnames=list(report_rows[0].keys()))
         writer.writeheader()
         writer.writerows(report_rows)
-    print(f"✅ {len(report_rows)} γραμμές saved σε {REPORT_FILE}")
+    print(f"✅ {len(report_rows)} rows saved to {REPORT_FILE}")
 
     summarize(report_rows)
 
