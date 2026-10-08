@@ -232,11 +232,11 @@ def score_stock(data, sector_cfg):
     s, f = 0, []
     gm = data.get("gross_margin")
     om = data.get("operating_margin")
-    if gm and isinstance(gm, (int, float)):
+    if gm is not None and isinstance(gm, (int, float)):
         if gm >= moat_cfg.get("gross_margin_strong", 0.50): s += 15; f.append(f"✅ Gross margin {gm:.0%}")
         elif gm >= moat_cfg.get("gross_margin_ok", 0.35): s += 8; f.append(f"🟡 Gross margin {gm:.0%}")
         else: f.append(f"🔴 Gross margin {gm:.0%}")
-    if om and isinstance(om, (int, float)):
+    if om is not None and isinstance(om, (int, float)):
         if om >= 0.20: s += 10; f.append(f"✅ Op margin {om:.0%}")
         elif om >= 0.10: s += 5; f.append(f"🟡 Op margin {om:.0%}")
         elif om > 0: s += 2; f.append(f"🔴 Op margin {om:.0%}")
@@ -256,7 +256,7 @@ def score_stock(data, sector_cfg):
     s, f = 0, []
     rg = data.get("revenue_growth")
     eg = data.get("earnings_growth")
-    if rg and isinstance(rg, (int, float)):
+    if rg is not None and isinstance(rg, (int, float)):
         if rg >= growth_cfg.get("revenue_growth_strong", 0.20): s += 15; f.append(f"🚀 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_ok", 0.10): s += 8; f.append(f"📈 Rev growth {rg:.0%}")
         elif rg >= growth_cfg.get("revenue_growth_weak", 0.05): s += 3; f.append(f"🟡 Rev growth {rg:.0%}")
@@ -318,11 +318,11 @@ def score_stock(data, sector_cfg):
     s, f = 0, []
     roic = data.get("roic")
     spread = data.get("roic_wacc_spread")
-    if roic and isinstance(roic, (int, float)):
+    if roic is not None and isinstance(roic, (int, float)):
         if roic >= eva_cfg.get("roic_strong", 0.20): s += 10; f.append(f"✅ ROIC {roic:.1%}")
         elif roic >= eva_cfg.get("roic_ok", 0.10): s += 5; f.append(f"🟡 ROIC {roic:.1%}")
         else: f.append(f"🔴 ROIC {roic:.1%}")
-    if spread and isinstance(spread, (int, float)):
+    if spread is not None and isinstance(spread, (int, float)):
         if spread > 0.05: s += 7; f.append(f"✅ ROIC-WACC +{spread:.1%}")
         elif spread > 0: s += 3; f.append(f"🟡 ROIC-WACC +{spread:.1%}")
         else: f.append(f"🔴 ROIC < WACC")
@@ -341,7 +341,7 @@ def score_stock(data, sector_cfg):
     tech_cfg = sector_cfg.get("technicals", {})
     s, f = 0, []
     pct_high = data.get("pct_from_high")
-    if pct_high and isinstance(pct_high, (int, float)):
+    if pct_high is not None and isinstance(pct_high, (int, float)):
         if pct_high <= tech_cfg.get("from_52w_high_deep_value", -0.50): s += 6; f.append(f"📉 -{abs(pct_high):.0%} (deep value)")
         elif pct_high <= tech_cfg.get("from_52w_high_opportunity", -0.30): s += 4; f.append(f"📉 -{abs(pct_high):.0%} from high")
         elif pct_high >= -0.05: s += 4; f.append(f"🚀 Near/at new high (momentum)")
@@ -351,7 +351,7 @@ def score_stock(data, sector_cfg):
         elif pct_dma > 0.10: s += 3; f.append(f"📈 Steady uptrend above 200DMA ({pct_dma:+.1%})")
         else: s += 1; f.append(f"⚠️ Below 200DMA ({pct_dma:+.1%})")
     rsi = data.get("rsi")
-    if rsi and isinstance(rsi, (int, float)):
+    if rsi is not None and isinstance(rsi, (int, float)):
         if rsi <= 30: s += 5; f.append(f"🟢 RSI {rsi:.0f} (oversold)")
         elif rsi <= 45: s += 3; f.append(f"🟡 RSI {rsi:.0f}")
         elif rsi < 70: s += 3; f.append(f"💪 RSI {rsi:.0f} (bullish momentum)")
