@@ -1,2 +1,5 @@
 yfinance==0.2.38
 pandas==2.2.0
+numpy
+lxml
+html5lib

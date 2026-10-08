@@ -6,6 +6,8 @@ Weekly Stock Screener — v3
 import yfinance as yf
 import json
 import csv
+import html
+import pandas as pd
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -133,12 +135,14 @@ def get_stock_data(ticker, retries=1, delay=3, fallback_name=None):
             if q_income is not None and q_balance is not None:
                 for i in range(min(4, q_income.shape[1])):
                     try:
-                        ebit = q_income.iloc[:, i].get("EBIT") or q_income.iloc[:, i].get("Operating Income")
-                        nopat = ebit * 0.79 if ebit else None
+                        ebit = q_income.iloc[:, i].get("EBIT")
+                        if not pd.notna(ebit):
+                            ebit = q_income.iloc[:, i].get("Operating Income")
+                        nopat = ebit * 0.79 if pd.notna(ebit) else None
                         total_assets = q_balance.iloc[:, i].get("Total Assets")
                         current_liab = q_balance.iloc[:, i].get("Current Liabilities")
-                        invested_capital = (total_assets - current_liab) if (total_assets and current_liab) else None
-                        if nopat and invested_capital and invested_capital > 0:
+                        invested_capital = (total_assets - current_liab) if (pd.notna(total_assets) and pd.notna(current_liab)) else None
+                        if pd.notna(nopat) and invested_capital and invested_capital > 0:
                             roic_values.append(nopat / invested_capital)
                     except:
                         continue
@@ -370,7 +374,7 @@ def score_stock(data, sector_cfg):
     elif any(x in industry for x in ["Healthcare", "Technology", "Energy"]): s += 3; f.append("🌍 Growth industry")
     if isinstance(rg, (int, float)):
         if rg >= 0.20: s += 5; f.append("🌍 Rev growth proxy SAM")
-        elif rg >= 0.10: s += 3
+        elif rg >= 0.10: s += 3; f.append("🌍 Moderate rev growth proxy SAM")
     scores["sam"], flags["sam"] = min(s, 15), f
 
     # 7. CATALYST /20
@@ -391,7 +395,7 @@ def score_stock(data, sector_cfg):
         elif upside >= 0.15: s += 3; f.append(f"🎯 Analyst upside {upside:.0%}")
     if isinstance(num_analysts, (int, float)):
         if num_analysts >= 15: s += 3; f.append(f"🎯 {num_analysts} analysts covering")
-        elif num_analysts >= 8: s += 2
+        elif num_analysts >= 8: s += 2; f.append(f"🎯 {num_analysts} analysts covering")
     if isinstance(pct_high, (int, float)) and pct_high <= -0.40: s += 2; f.append("🎯 Deep value — mean reversion")
     insider = data.get("insider_net_pct")
     if insider is not None and isinstance(insider, (int, float)):
@@ -447,16 +451,28 @@ def format_market_cap(mc):
 def log_recommendations(results_reported):
     date_str = datetime.now().strftime("%Y-%m-%d")
     file_exists = os.path.exists(RECOMMENDATIONS_LOG)
+
+    already_logged_today = set()
+    if file_exists:
+        with open(RECOMMENDATIONS_LOG, newline="") as f:
+            for row in csv.DictReader(f):
+                if row.get("date") == date_str:
+                    already_logged_today.add(row.get("ticker"))
+
+    rows_to_write = [r for r in results_reported if r["data"]["ticker"] not in already_logged_today]
+    skipped = len(results_reported) - len(rows_to_write)
+
     with open(RECOMMENDATIONS_LOG, "a", newline="") as f:
         writer = csv.writer(f)
         if not file_exists:
             writer.writerow(["date", "ticker", "name", "sector", "price", "total_score", "action"])
-        for r in results_reported:
+        for r in rows_to_write:
             d = r["data"]
             thresholds = r.get("thresholds", {"buy": 100, "watch": 80, "pass": 65})
             action = get_action(r["total_score"], thresholds)[0]
             writer.writerow([date_str, d["ticker"], d["name"], d["sector"], d["price"], r["total_score"], action])
-    print(f"📝 {len(results_reported)} recommendations logged to {RECOMMENDATIONS_LOG}")
+    print(f"📝 {len(rows_to_write)} recommendations logged to {RECOMMENDATIONS_LOG}"
+          + (f" ({skipped} already logged today, skipped)" if skipped else ""))
 
 
 def load_recommendation_history():
@@ -545,9 +561,9 @@ def build_html_report(results, watchlist_meta, history=None, performance_html=""
         <div style="background:white;border:0.5px solid #e5e7eb;border-left:4px solid {lc};border-radius:12px;padding:18px;margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
                 <div>
-                    <span style="font-size:20px;font-weight:600">{d['ticker']}</span>
-                    <span style="font-size:13px;color:#6b7280;margin-left:8px">{d['name']}</span>
-                    <div style="font-size:11px;color:#9ca3af;margin-top:2px">{d['industry']} · {d['sector']}</div>
+                    <span style="font-size:20px;font-weight:600">{html.escape(str(d['ticker']))}</span>
+                    <span style="font-size:13px;color:#6b7280;margin-left:8px">{html.escape(str(d['name']))}</span>
+                    <div style="font-size:11px;color:#9ca3af;margin-top:2px">{html.escape(str(d['industry']))} · {html.escape(str(d['sector']))}</div>
                     <div style="font-size:11px;margin-top:3px">{ledger_badge(d['ticker'], total, d.get('price'), history)}</div>
                 </div>
                 <div style="text-align:right">
@@ -601,8 +617,8 @@ def build_html_report(results, watchlist_meta, history=None, performance_html=""
         rsi_val = d.get('rsi') or 0
         row_bg = "background:#f9fafb;" if i % 2 == 1 else ""
         rest_rows += f"""<tr style="{row_bg}">
-            <td style="padding:7px 8px;font-weight:500">{d['ticker']}<br>
-                <small style="color:#9ca3af;font-weight:400">{d['industry'][:22]}</small><br>
+            <td style="padding:7px 8px;font-weight:500">{html.escape(str(d['ticker']))}<br>
+                <small style="color:#9ca3af;font-weight:400">{html.escape(str(d['industry'])[:22])}</small><br>
                 <small style="font-size:10px">{ledger_badge_compact(d['ticker'], total, d.get('price'), history)}</small></td>
             <td style="padding:7px 8px">${price:.2f}</td>
             <td style="padding:7px 8px;color:#dc2626">{pct_high:.0%}</td>
@@ -644,7 +660,7 @@ def build_html_report(results, watchlist_meta, history=None, performance_html=""
     </div>
     <div style="display:flex;gap:16px;margin-bottom:20px;font-size:12px;color:#6b7280;">
         <span>📊 Avg score: {avg_score:.0f}/150</span>
-        <span>🏆 Top sector: {top_sector} ({top_sector_n}/{len(results_sorted)})</span>
+        <span>🏆 Top sector: {html.escape(str(top_sector))} ({top_sector_n}/{len(results_sorted)})</span>
     </div>
     <div style="font-size:16px;font-weight:600;margin-bottom:14px">🔥 Top 5 of the week</div>
     {cards_html}
@@ -656,6 +672,8 @@ def build_html_report(results, watchlist_meta, history=None, performance_html=""
 # ── Email ─────────────────────────────────────────────────────────
 
 def send_email(html):
+    if not EMAIL_PASSWORD:
+        raise RuntimeError("GMAIL_APP_PASSWORD is not set — cannot send email. Set it as an env var / GitHub Actions secret.")
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"📊 Weekly Screener — {datetime.now().strftime('%d/%m/%Y')}"
     msg["From"] = SENDER_EMAIL

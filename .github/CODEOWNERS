@@ -1,0 +1,7 @@
+# Require review from the repo owner on changes to CI workflows and the
+# Claude Code config that defines this repo's own test/review rules.
+# Note: this file only has teeth if branch protection on `main` requires
+# a code owner review — enable that separately in repo Settings.
+
+/.github/workflows/ @VaGlar
+/.claude/ @VaGlar
