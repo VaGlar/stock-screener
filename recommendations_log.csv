@@ -269,3 +269,33 @@ date,ticker,name,sector,price,total_score,action
 2026-10-05,NLY,Annaly Capital Management Inc.,Real Estate,18.5,89,BUY
 2026-10-05,PATH,"UiPath, Inc.",Technology,13.12,89,BUY
 2026-10-05,NVDA,NVIDIA Corporation,Technology,233.95,89,BUY
+2026-10-12,FICO,Fair Isaac Corporation,Technology,667.58,130,STRONG BUY
+2026-10-12,000660.KS,SK hynix,Technology,1605000.0,114,STRONG BUY
+2026-10-12,SKHY,SK hynix Inc.,Technology,169.03,109,STRONG BUY
+2026-10-12,WDC,Western Digital Corporation,Technology,397.28,108,STRONG BUY
+2026-10-12,402340.KS,SKSQUARE,Technology,984000.0,108,STRONG BUY
+2026-10-12,MU,"Micron Technology, Inc.",Technology,1029.0,105,STRONG BUY
+2026-10-12,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,160.34,105,STRONG BUY
+2026-10-12,SNDK,Sandisk Corporation,Technology,1581.82,102,STRONG BUY
+2026-10-12,006800.KS,MIRAE ASSET SEC,Financial Services,28400.0,101,STRONG BUY
+2026-10-12,INCY,Incyte Corporation,Healthcare,112.79,100,STRONG BUY
+2026-10-12,039490.KS,KIWOOM,Financial Services,238000.0,96,BUY
+2026-10-12,326030.KS,SKBP,Healthcare,71000.0,96,BUY
+2026-10-12,SCHW,Charles Schwab Corporation (The,Financial Services,96.7,95,BUY
+2026-10-12,NTAP,"NetApp, Inc.",Technology,237.15,95,BUY
+2026-10-12,SEZL,Sezzle Inc.,Financial Services,128.64,94,BUY
+2026-10-12,MS,Morgan Stanley,Financial Services,190.02,93,BUY
+2026-10-12,NXPI,NXP Semiconductors N.V.,Technology,227.52,93,BUY
+2026-10-12,EDV.L,ENDEAVOUR MINING PLC ORD USD0.0,Basic Materials,4145.0,93,BUY
+2026-10-12,CF,"CF Industries Holdings, Inc.",Basic Materials,111.54,92,BUY
+2026-10-12,ADSK,"Autodesk, Inc.",Technology,235.35,92,BUY
+2026-10-12,278470.KS,APR,Consumer Defensive,352000.0,92,BUY
+2026-10-12,016360.KS,SamsungSecu,Financial Services,82800.0,92,BUY
+2026-10-12,BX,Blackstone Inc.,Financial Services,114.29,91,BUY
+2026-10-12,EOG,"EOG Resources, Inc.",Energy,148.16,91,BUY
+2026-10-12,VG,"Venture Global, Inc.",Energy,13.16,90,BUY
+2026-10-12,PLNT,"Planet Fitness, Inc.",Consumer Cyclical,47.98,90,BUY
+2026-10-12,CINF,Cincinnati Financial Corporatio,Financial Services,163.39,90,BUY
+2026-10-12,GEN,Gen Digital Inc.,Technology,23.25,90,BUY
+2026-10-12,CRM,"Salesforce, Inc.",Technology,229.13,90,BUY
+2026-10-12,AAF.L,AIRTEL AFRICA PLC ORD USD0.50,Communication Services,292.2,90,BUY
