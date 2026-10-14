@@ -5,6 +5,7 @@ and computes each recommendation's real performance to date, based on current pr
 """
 
 import csv
+import html
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -74,7 +75,7 @@ def _breakdown_table(groups, order):
         hr = sum(1 for r in sub if r["return_pct"] > 0) / len(sub)
         color = "#16a34a" if avg >= 0 else "#dc2626"
         rows_html += f"""<tr>
-            <td style="padding:6px 8px">{label}</td>
+            <td style="padding:6px 8px">{html.escape(str(label))}</td>
             <td style="padding:6px 8px">{len(sub)}</td>
             <td style="padding:6px 8px;color:{color}">{avg:+.1%}</td>
             <td style="padding:6px 8px">{hr:.0%}</td>
@@ -101,8 +102,8 @@ def _stock_row_multi(ticker, rows):
         for r in rows
     )
     return f"""<tr>
-        <td style="padding:6px 8px;font-weight:500">{ticker}</td>
-        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{action}</td>
+        <td style="padding:6px 8px;font-weight:500">{html.escape(str(ticker))}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#6b7280">{html.escape(str(action))}</td>
         <td style="padding:6px 8px;font-size:11px;color:#6b7280">{days_str}</td>
         <td style="padding:6px 8px;font-weight:600">{ret_str}</td>
     </tr>"""
@@ -197,6 +198,8 @@ def build_html_report(report_rows):
 
 
 def send_email(html):
+    if not EMAIL_PASSWORD:
+        raise RuntimeError("GMAIL_APP_PASSWORD is not set — cannot send email. Set it as an env var / GitHub Actions secret.")
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"📈 Performance Report — {datetime.now().strftime('%d/%m/%Y')}"
     msg["From"] = SENDER_EMAIL

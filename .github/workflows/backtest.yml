@@ -3,6 +3,9 @@ name: Backtest Scoring Model
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   PYTHONUNBUFFERED: "1"  # without this, stdout is block-buffered and logs appear out of order
 

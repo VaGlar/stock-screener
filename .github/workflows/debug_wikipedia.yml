@@ -3,6 +3,9 @@ name: Debug Wikipedia Tables
 on:
   workflow_dispatch:  # Manual only
 
+permissions:
+  contents: read
+
 jobs:
   debug:
     runs-on: ubuntu-latest
