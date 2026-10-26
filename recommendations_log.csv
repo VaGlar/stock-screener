@@ -329,3 +329,33 @@ date,ticker,name,sector,price,total_score,action
 2026-10-19,VG,"Venture Global, Inc.",Energy,12.72,89,BUY
 2026-10-19,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,23.3,89,BUY
 2026-10-19,LADR,Ladder Capital Corp,Real Estate,9.11,89,BUY
+2026-10-26,000660.KS,SK hynix,Technology,1275000.0,118,STRONG BUY
+2026-10-26,FICO,Fair Isaac Corporation,Technology,815.31,116,STRONG BUY
+2026-10-26,BCRX,"BioCryst Pharmaceuticals, Inc.",Healthcare,7.65,115,STRONG BUY
+2026-10-26,SKHY,SK hynix Inc.,Technology,137.02,114,STRONG BUY
+2026-10-26,402340.KS,SKSQUARE,Technology,769000.0,113,STRONG BUY
+2026-10-26,MU,"Micron Technology, Inc.",Technology,877.55,112,STRONG BUY
+2026-10-26,SNDK,Sandisk Corporation,Technology,1238.03,109,STRONG BUY
+2026-10-26,006800.KS,MIRAE ASSET SEC,Financial Services,24000.0,103,STRONG BUY
+2026-10-26,BKNG,Booking Holdings Inc. Common St,Consumer Cyclical,155.83,102,STRONG BUY
+2026-10-26,278470.KS,APR,Consumer Defensive,282000.0,101,STRONG BUY
+2026-10-26,005940.KS,NHIS,Financial Services,22550.0,101,STRONG BUY
+2026-10-26,483650.KS,d'Alba Global,Consumer Defensive,149300.0,100,STRONG BUY
+2026-10-26,APP,Applovin Corporation,Communication Services,260.25,99,BUY
+2026-10-26,FRES.L,FRESNILLO PLC ORD USD0.50,Basic Materials,2358.0,99,BUY
+2026-10-26,016360.KS,SamsungSecu,Financial Services,76300.0,99,BUY
+2026-10-26,KGC,Kinross Gold Corporation,Basic Materials,22.34,98,BUY
+2026-10-26,NVDA,NVIDIA Corporation,Technology,210.96,96,BUY
+2026-10-26,ALAB,"Astera Labs, Inc.",Technology,257.16,96,BUY
+2026-10-26,039490.KS,KIWOOM,Financial Services,210500.0,96,BUY
+2026-10-26,005930.KS,SamsungElec,Technology,213000.0,96,BUY
+2026-10-26,IAG,Iamgold Corporation,Basic Materials,16.26,95,BUY
+2026-10-26,NTAP,"NetApp, Inc.",Technology,215.48,94,BUY
+2026-10-26,NXPI,NXP Semiconductors N.V.,Technology,234.92,94,BUY
+2026-10-26,042700.KS,HANMISemi,Technology,184000.0,94,BUY
+2026-10-26,INCY,Incyte Corporation,Healthcare,115.71,93,BUY
+2026-10-26,TER,"Teradyne, Inc.",Technology,308.85,93,BUY
+2026-10-26,PBR-A,Petroleo Brasileiro S.A. Petrob,Energy,23.53,92,BUY
+2026-10-26,GS,"Goldman Sachs Group, Inc. (The)",Financial Services,875.68,91,BUY
+2026-10-26,STX,Seagate Technology Holdings PLC,Technology,630.49,90,BUY
+2026-10-26,GOOG,Alphabet Inc.,Communication Services,317.28,90,BUY
