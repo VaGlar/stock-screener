@@ -449,3 +449,33 @@ date,ticker,name,sector,price,total_score,action
 2026-11-16,EXPE,"Expedia Group, Inc.",Consumer Cyclical,257.97,92,BUY
 2026-11-16,039490.KS,KIWOOM,Financial Services,198900.0,92,BUY
 2026-11-16,005930.KS,SamsungElec,Technology,196800.0,92,BUY
+2026-11-23,FICO,Fair Isaac Corporation,Technology,694.31,127,STRONG BUY
+2026-11-23,MU,"Micron Technology, Inc.",Technology,594.51,112,STRONG BUY
+2026-11-23,UPST,"Upstart Holdings, Inc.",Financial Services,15.66,107,STRONG BUY
+2026-11-23,SNDK,Sandisk Corporation,Technology,79.24,106,STRONG BUY
+2026-11-23,APP,Applovin Corporation,Communication Services,348.29,104,STRONG BUY
+2026-11-23,FRES.L,FRESNILLO PLC ORD USD0.50,Basic Materials,2243.0,103,STRONG BUY
+2026-11-23,006800.KS,MIRAE ASSET SEC,Financial Services,18240.0,103,STRONG BUY
+2026-11-23,GS,"Goldman Sachs Group, Inc. (The)",Financial Services,790.69,101,STRONG BUY
+2026-11-23,PBR,Petroleo Brasileiro S.A. Petrob,Energy,16.01,100,STRONG BUY
+2026-11-23,OXY,Occidental Petroleum Corporatio,Energy,53.9,99,BUY
+2026-11-23,TSM,Taiwan Semiconductor Manufactur,Technology,318.71,99,BUY
+2026-11-23,SOFI,"SoFi Technologies, Inc.",Financial Services,12.48,99,BUY
+2026-11-23,EXPE,"Expedia Group, Inc.",Consumer Cyclical,234.96,99,BUY
+2026-11-23,SKHY,SK hynix Inc.,Technology,103.57,98,BUY
+2026-11-23,CRM,"Salesforce, Inc.",Technology,180.62,98,BUY
+2026-11-23,000660.KS,SK hynix,Technology,1085000.0,98,BUY
+2026-11-23,KLAC,KLA Corporation,Technology,126.87,96,BUY
+2026-11-23,278470.KS,APR,Consumer Defensive,257000.0,96,BUY
+2026-11-23,005930.KS,SamsungElec,Technology,177500.0,96,BUY
+2026-11-23,016360.KS,SamsungSecu,Financial Services,67600.0,96,BUY
+2026-11-23,ITH.L,ITHACA ENERGY PLC ORD 1P,Energy,232.0,95,BUY
+2026-11-23,WDC,Western Digital Corporation,Technology,261.11,94,BUY
+2026-11-23,PLTR,Palantir Technologies Inc.,Technology,143.49,94,BUY
+2026-11-23,NFLX,"Netflix, Inc.",Communication Services,56.73,94,BUY
+2026-11-23,ADBE,Adobe Inc.,Technology,217.71,94,BUY
+2026-11-23,CPAY,"Corpay, Inc.",Technology,429.84,94,BUY
+2026-11-23,EOG,"EOG Resources, Inc.",Energy,148.6,94,BUY
+2026-11-23,PR,Permian Resources Corporation,Energy,21.15,93,BUY
+2026-11-23,PATH,"UiPath, Inc.",Technology,10.96,92,BUY
+2026-11-23,VG,"Venture Global, Inc.",Energy,11.95,92,BUY
